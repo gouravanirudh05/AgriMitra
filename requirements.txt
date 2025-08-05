@@ -1,0 +1,5 @@
+dotenv
+faiss-cpu 
+PyPDF2 
+sentence-transformers 
+google-generativeai
