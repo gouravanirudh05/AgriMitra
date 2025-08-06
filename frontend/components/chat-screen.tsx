@@ -29,6 +29,8 @@ import {
 } from "lucide-react"
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from "@/components/ui/sheet"
 import LanguageSelector from "./language-selector"
+import Markdown from 'react-markdown'
+import remarkGfm from 'remark-gfm'
 
 interface Message {
   id: string
@@ -642,7 +644,7 @@ export default function ChatScreen() {
                 <div key={msg.id} className={`flex ${msg.isUser ? "justify-end" : "justify-start"}`}>
                   <Card className={`max-w-[80%] ${msg.isUser ? "bg-green-600 text-white" : "bg-white border"}`}>
                     <CardContent className="p-3">
-                      <p className="text-sm">{msg.text}</p>
+                      <p className="text-sm"><Markdown remarkPlugins={[remarkGfm]}>{msg.text}</Markdown></p>
                       <p className={`text-xs mt-1 ${msg.isUser ? "text-green-100" : "text-gray-500"}`}>
                         {msg.timestamp.toLocaleTimeString()}
                       </p>
