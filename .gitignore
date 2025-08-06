@@ -208,3 +208,7 @@ __marimo__/
 faiss_store
 
 frontend/package-lock.json
+temp
+
+__pycache__
+frontend/package-lock.json
