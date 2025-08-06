@@ -1,16 +1,25 @@
-import google.generativeai as genai
 import os
+import google.generativeai as genai
 from typing import Dict
+from app.services.rag_service import RAGService
+import dotenv
+dotenv.load_dotenv()
 
-# Configure Gemini AI
-GEMINI_API_KEY = os.getenv("GEMINI_API_KEY")
+# Configure Gemini
+GEMINI_API_KEY = os.getenv("GOOGLE_API_KEY")
+print(GEMINI_API_KEY)
 if GEMINI_API_KEY:
     genai.configure(api_key=GEMINI_API_KEY)
-    model = genai.GenerativeModel('gemini-pro')
+    model = genai.GenerativeModel('gemini-2.0-flash')
+    print(f"Gemini model loaded: {model is not None}")
+
 else:
     model = None
 
 class AIService:
+    # Initialize RAG
+    rag_service = RAGService()
+
     @staticmethod
     def get_farming_context(user_data: Dict, language: str) -> str:
         """Create context for AI based on user data and language"""
@@ -41,26 +50,37 @@ class AIService:
         - mr: Marathi (मराठीत उत्तर द्या)
         """
         return context
-    
+
     @staticmethod
     async def get_ai_response(message: str, user_data: Dict, language: str) -> str:
-        """Get AI response for farming question"""
+        """Get AI response using RAG (FAISS + Gemini)"""
         if not model:
             return AIService.get_fallback_response(language)
-        
+
         try:
             context = AIService.get_farming_context(user_data, language)
-            full_prompt = f"{context}\n\nUser question: {message}"
-            
+            retrieved_chunks = AIService.rag_service.retrieve_relevant_chunks(message)
+
+            # Prompt with context
+            full_prompt = (
+                f"{context}\n\n"
+                f"Context from documents:\n"
+                f"{retrieved_chunks[0]}\n\n"
+                f"{retrieved_chunks[1]}\n\n"
+                f"{retrieved_chunks[2]}\n\n"
+                f"User question: {message}"
+            )
+
             response = model.generate_content(full_prompt)
             return response.text
+
         except Exception as e:
-            print(f"AI service error: {e}")
+            print(f"[AIService] RAG failed: {e}")
             return AIService.get_fallback_response(language)
-    
+
     @staticmethod
     def get_fallback_response(language: str) -> str:
-        """Get fallback response when AI service is unavailable"""
+        """Fallback response if Gemini or RAG fails"""
         fallback_responses = {
             "en": "Thank you for your farming question. For the best advice tailored to your specific situation, I recommend consulting with local agricultural experts or extension officers who can provide guidance based on your region's conditions.",
             "hi": "आपके खेती के सवाल के लिए धन्यवाद। आपकी विशिष्ट स्थिति के लिए सबसे अच्छी सलाह के लिए, मैं स्थानीय कृषि विशेषज्ञों या विस्तार अधिकारियों से सलाह लेने की सिफारिश करता हूं जो आपके क्षेत्र की स्थितियों के आधार पर मार्गदर्शन प्रदान कर सकते हैं।",

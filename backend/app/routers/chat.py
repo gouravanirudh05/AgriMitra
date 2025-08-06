@@ -1,5 +1,5 @@
 from fastapi import APIRouter, HTTPException, status
-from app.models import ChatMessage, ChatResponse, Conversation
+from app.models import ChatMessage, ChatResponse
 from app.database import get_database
 from app.services.ai_service import AIService
 from bson import ObjectId
@@ -10,76 +10,68 @@ router = APIRouter()
 
 @router.post("/chat", response_model=ChatResponse)
 async def chat_with_ai(chat_data: ChatMessage):
-    """Handle chat message and get AI response"""
+    """Handle user query and return AI response using Gemini + FAISS"""
     db = get_database()
-    
+
     try:
-        # Get user data
+        # Validate user
         if not ObjectId.is_valid(chat_data.userId):
             raise HTTPException(
                 status_code=status.HTTP_400_BAD_REQUEST,
                 detail="Invalid user ID format"
             )
-        
+
         user = await db.users.find_one({"_id": ObjectId(chat_data.userId)})
         if not user:
             raise HTTPException(
                 status_code=status.HTTP_404_NOT_FOUND,
                 detail="User not found"
             )
-        
-        # Get AI response
+
+        # Get response from AIService
         ai_response = await AIService.get_ai_response(
             chat_data.message,
             user,
             chat_data.language
         )
-        
-        # Generate conversation ID if not provided
+
+        # Conversation ID
         conversation_id = chat_data.conversationId or str(uuid.uuid4())
-        
-        # Create messages
-        user_message = {
+
+        # Format messages
+        user_msg = {
             "id": str(uuid.uuid4()),
             "text": chat_data.message,
             "isUser": True,
             "timestamp": datetime.utcnow()
         }
-        
-        ai_message = {
+
+        ai_msg = {
             "id": str(uuid.uuid4()),
             "text": ai_response,
             "isUser": False,
             "timestamp": datetime.utcnow()
         }
-        
-        # Check if conversation exists
-        existing_conversation = await db.conversations.find_one({"id": conversation_id})
-        
-        if existing_conversation:
-            # Update existing conversation
+
+        # Save to conversation
+        existing = await db.conversations.find_one({"id": conversation_id})
+        if existing:
             await db.conversations.update_one(
                 {"id": conversation_id},
-                {
-                    "$push": {
-                        "messages": {"$each": [user_message, ai_message]}
-                    }
-                }
+                {"$push": {"messages": {"$each": [user_msg, ai_msg]}}}
             )
         else:
-            # Create new conversation
-            conversation_doc = {
+            conv_doc = {
                 "id": conversation_id,
                 "userId": chat_data.userId,
                 "title": chat_data.message[:50] + ("..." if len(chat_data.message) > 50 else ""),
-                "messages": [user_message, ai_message],
+                "messages": [user_msg, ai_msg],
                 "createdAt": datetime.utcnow()
             }
-            
-            await db.conversations.insert_one(conversation_doc)
-        
+            await db.conversations.insert_one(conv_doc)
+
         return ChatResponse(response=ai_response, conversationId=conversation_id)
-        
+
     except HTTPException:
         raise
     except Exception as e:
@@ -92,36 +84,28 @@ async def chat_with_ai(chat_data: ChatMessage):
 async def get_user_conversations(user_id: str):
     """Get all conversations for a user"""
     db = get_database()
-    
+
     try:
-        # Validate user ID
         if not ObjectId.is_valid(user_id):
             raise HTTPException(
                 status_code=status.HTTP_400_BAD_REQUEST,
                 detail="Invalid user ID format"
             )
-        
-        # Get conversations
+
         conversations = await db.conversations.find(
             {"userId": user_id}
         ).sort("createdAt", -1).limit(50).to_list(length=50)
-        
-        # Format response
-        formatted_conversations = []
-        for conv in conversations:
-            formatted_conv = {
-                "id": conv["id"],
-                "userId": conv["userId"],
-                "title": conv["title"],
-                "messages": conv["messages"],
-                "createdAt": conv["createdAt"]
-            }
-            formatted_conversations.append(formatted_conv)
-        
-        return formatted_conversations
-        
-    except HTTPException:
-        raise
+
+        return [
+            {
+                "id": c["id"],
+                "userId": c["userId"],
+                "title": c["title"],
+                "messages": c["messages"],
+                "createdAt": c["createdAt"]
+            } for c in conversations
+        ]
+
     except Exception as e:
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
@@ -132,21 +116,16 @@ async def get_user_conversations(user_id: str):
 async def get_conversation_messages(conversation_id: str):
     """Get messages for a specific conversation"""
     db = get_database()
-    
+
     try:
-        # Find conversation
         conversation = await db.conversations.find_one({"id": conversation_id})
-        
         if not conversation:
             raise HTTPException(
                 status_code=status.HTTP_404_NOT_FOUND,
                 detail="Conversation not found"
             )
-        
         return conversation.get("messages", [])
-        
-    except HTTPException:
-        raise
+
     except Exception as e:
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
