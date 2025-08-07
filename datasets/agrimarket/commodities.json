@@ -1,0 +1,1472 @@
+{
+  "1": [
+    "Wheat"
+  ],
+  "2": [
+    "Paddy",
+    "Dhan",
+    "Common"
+  ],
+  "3": [
+    "Rice"
+  ],
+  "4": [
+    "Maize"
+  ],
+  "5": [
+    "Jowar",
+    "Sorghum"
+  ],
+  "6": [
+    "Bengal Gram",
+    "Gram",
+    "Whole"
+  ],
+  "7": [
+    "Red Gram"
+  ],
+  "8": [
+    "Black Gram",
+    "Urd Beans",
+    "Whole"
+  ],
+  "9": [
+    "Green Gram",
+    "Moong",
+    "Whole"
+  ],
+  "10": [
+    "Groundnut"
+  ],
+  "11": [
+    "Sesamum",
+    "Sesame,Gingelly,Til"
+  ],
+  "12": [
+    "Mustard"
+  ],
+  "13": [
+    "Soyabean"
+  ],
+  "14": [
+    "Sunflower"
+  ],
+  "15": [
+    "Cotton"
+  ],
+  "16": [
+    "Jute"
+  ],
+  "17": [
+    "Apple"
+  ],
+  "18": [
+    "Orange"
+  ],
+  "19": [
+    "Banana"
+  ],
+  "20": [
+    "Mango"
+  ],
+  "21": [
+    "Pineapple"
+  ],
+  "22": [
+    "Grapes"
+  ],
+  "23": [
+    "Onion"
+  ],
+  "24": [
+    "Potato"
+  ],
+  "25": [
+    "Garlic"
+  ],
+  "26": [
+    "Chili Red"
+  ],
+  "27": [
+    "Ginger",
+    "Dry"
+  ],
+  "28": [
+    "Bajra",
+    "Pearl Millet",
+    "Cumbu"
+  ],
+  "29": [
+    "Barley",
+    "Jau"
+  ],
+  "30": [
+    "Ragi",
+    "Finger Millet"
+  ],
+  "31": [
+    "Cauliflower"
+  ],
+  "32": [
+    "Brinjal"
+  ],
+  "33": [
+    "Cashewnuts"
+  ],
+  "34": [
+    "Black pepper"
+  ],
+  "35": [
+    "Turmeric"
+  ],
+  "36": [
+    "Cardamoms"
+  ],
+  "37": [
+    "Betelnuts"
+  ],
+  "38": [
+    "Cummin Seed",
+    "Jeera"
+  ],
+  "39": [
+    "Coriander",
+    "Leaves"
+  ],
+  "40": [
+    "Tea"
+  ],
+  "41": [
+    "Coffee"
+  ],
+  "42": [
+    "Methi",
+    "Leaves"
+  ],
+  "43": [
+    "Methi Seeds"
+  ],
+  "44": [
+    "Sugar"
+  ],
+  "45": [
+    "Arhar",
+    "Tur",
+    "Red Gram",
+    "Whole"
+  ],
+  "46": [
+    "Green Peas"
+  ],
+  "47": [
+    "Binoula"
+  ],
+  "48": [
+    "Safflower"
+  ],
+  "49": [
+    "Mash"
+  ],
+  "50": [
+    "Kharif Mash"
+  ],
+  "51": [
+    "Riccbcan"
+  ],
+  "52": [
+    "Lentil",
+    "Masur",
+    "Whole"
+  ],
+  "53": [
+    "Field Pea"
+  ],
+  "54": [
+    "Raya"
+  ],
+  "55": [
+    "Toria"
+  ],
+  "56": [
+    "Linseed"
+  ],
+  "57": [
+    "Dhaincha"
+  ],
+  "58": [
+    "Chikoos",
+    "Sapota"
+  ],
+  "59": [
+    "Papaya"
+  ],
+  "60": [
+    "Water Melon"
+  ],
+  "61": [
+    "Gur",
+    "Jaggery"
+  ],
+  "62": [
+    "Guar"
+  ],
+  "63": [
+    "Taramira"
+  ],
+  "64": [
+    "Mousambi",
+    "Sweet Lime"
+  ],
+  "65": [
+    "Tomato"
+  ],
+  "66": [
+    "Cluster beans"
+  ],
+  "67": [
+    "Bitter gourd"
+  ],
+  "68": [
+    "Bottle gourd"
+  ],
+  "69": [
+    "Ashgourd"
+  ],
+  "70": [
+    "Pumpkin"
+  ],
+  "71": [
+    "Bhindi",
+    "Ladies Finger"
+  ],
+  "72": [
+    "Amaranthus"
+  ],
+  "73": [
+    "Green Chilli"
+  ],
+  "74": [
+    "Chilly Capsicum"
+  ],
+  "75": [
+    "Cowpea",
+    "Veg"
+  ],
+  "76": [
+    "Banana - Green"
+  ],
+  "77": [
+    "Dal",
+    "Avare"
+  ],
+  "78": [
+    "Cowpea",
+    "Lobia",
+    "Karamani"
+  ],
+  "79": [
+    "Mataki"
+  ],
+  "80": [
+    "Beans"
+  ],
+  "81": [
+    "Moath Dal"
+  ],
+  "82": [
+    "Lak",
+    "Teora"
+  ],
+  "83": [
+    "Other Pulses"
+  ],
+  "84": [
+    "Niger Seed",
+    "Ramtil"
+  ],
+  "85": [
+    "Cotton Seed"
+  ],
+  "86": [
+    "Tapioca"
+  ],
+  "87": [
+    "Amphophalus"
+  ],
+  "88": [
+    "Ginger",
+    "Green"
+  ],
+  "89": [
+    "Cocoa"
+  ],
+  "90": [
+    "Cloves"
+  ],
+  "91": [
+    "Nutmeg"
+  ],
+  "92": [
+    "Mace"
+  ],
+  "93": [
+    "Corriander seed"
+  ],
+  "94": [
+    "Pepper garbled"
+  ],
+  "95": [
+    "Pepper ungarbled"
+  ],
+  "96": [
+    "Rubber"
+  ],
+  "97": [
+    "Coconut Seed"
+  ],
+  "98": [
+    "Big Gram"
+  ],
+  "99": [
+    "Kulthi",
+    "Horse Gram"
+  ],
+  "100": [
+    "Karamani"
+  ],
+  "101": [
+    "Thinai",
+    "Italian Millet"
+  ],
+  "102": [
+    "Kodo Millet",
+    "Varagu"
+  ],
+  "103": [
+    "Hybrid Cumbu"
+  ],
+  "104": [
+    "T.V. Cumbu"
+  ],
+  "105": [
+    "Foxtail Millet",
+    "Navane"
+  ],
+  "106": [
+    "Same",
+    "Savi"
+  ],
+  "107": [
+    "Castor Seed"
+  ],
+  "108": [
+    "Honge seed"
+  ],
+  "109": [
+    "Hippe Seed"
+  ],
+  "110": [
+    "Neem Seed"
+  ],
+  "111": [
+    "Pundi Seed"
+  ],
+  "112": [
+    "Copra"
+  ],
+  "113": [
+    "Ambada Seed"
+  ],
+  "114": [
+    "Dry Chillies"
+  ],
+  "115": [
+    "Soanf"
+  ],
+  "116": [
+    "Ajwan"
+  ],
+  "117": [
+    "Coconut"
+  ],
+  "118": [
+    "Sunhemp"
+  ],
+  "119": [
+    "Arecanut",
+    "Betelnut",
+    "Supari"
+  ],
+  "120": [
+    "Tobacco"
+  ],
+  "121": [
+    "Myrobolan",
+    "Harad"
+  ],
+  "122": [
+    "Betal Leaves"
+  ],
+  "123": [
+    "Sugarcane"
+  ],
+  "124": [
+    "Jaggery"
+  ],
+  "125": [
+    "Sweet Potato"
+  ],
+  "126": [
+    "Carrot"
+  ],
+  "127": [
+    "Cabbage"
+  ],
+  "128": [
+    "Ladies Finger"
+  ],
+  "129": [
+    "Snakeguard"
+  ],
+  "130": [
+    "Beetroot"
+  ],
+  "131": [
+    "White Pumpkin"
+  ],
+  "132": [
+    "Cucumbar",
+    "Kheera"
+  ],
+  "133": [
+    "Ridgeguard",
+    "Tori"
+  ],
+  "134": [
+    "Raddish"
+  ],
+  "135": [
+    "Thondekai"
+  ],
+  "136": [
+    "Duster Beans"
+  ],
+  "137": [
+    "Capsicum"
+  ],
+  "138": [
+    "Green Avare",
+    "W"
+  ],
+  "139": [
+    "Alsandikai"
+  ],
+  "140": [
+    "Chow Chow"
+  ],
+  "141": [
+    "Drumstick"
+  ],
+  "142": [
+    "Chapparad Avare"
+  ],
+  "143": [
+    "Thogrikai"
+  ],
+  "144": [
+    "Leafy Vegetable"
+  ],
+  "145": [
+    "Mango",
+    "Raw-Ripe"
+  ],
+  "146": [
+    "Sweet Pumpkin"
+  ],
+  "147": [
+    "Peas Wet"
+  ],
+  "148": [
+    "Jamamkhan"
+  ],
+  "149": [
+    "Seemebadnekai"
+  ],
+  "150": [
+    "Knool Khol"
+  ],
+  "151": [
+    "Suvarna Gadde"
+  ],
+  "152": [
+    "Lime"
+  ],
+  "153": [
+    "Marasebu"
+  ],
+  "154": [
+    "Jack Fruit"
+  ],
+  "155": [
+    "Siddota"
+  ],
+  "156": [
+    "Jamun",
+    "Narale Hannu"
+  ],
+  "157": [
+    "Guava"
+  ],
+  "158": [
+    "Karbuja",
+    "Musk Melon"
+  ],
+  "159": [
+    "Chakotha"
+  ],
+  "160": [
+    "Borehannu"
+  ],
+  "161": [
+    "Pomegranate"
+  ],
+  "162": [
+    "Tender Coconut"
+  ],
+  "163": [
+    "Seetapal"
+  ],
+  "164": [
+    "Wood"
+  ],
+  "165": [
+    "Bamboo"
+  ],
+  "166": [
+    "Cane"
+  ],
+  "167": [
+    "Firewood"
+  ],
+  "168": [
+    "Soapnut",
+    "Antawala",
+    "Retha"
+  ],
+  "169": [
+    "Tamarind Seed"
+  ],
+  "170": [
+    "Antawala"
+  ],
+  "171": [
+    "Jute Seed"
+  ],
+  "172": [
+    "Cow"
+  ],
+  "173": [
+    "Ox"
+  ],
+  "174": [
+    "Bull"
+  ],
+  "175": [
+    "Calf"
+  ],
+  "176": [
+    "He Buffalo"
+  ],
+  "177": [
+    "She Buffalo"
+  ],
+  "178": [
+    "Sheep"
+  ],
+  "179": [
+    "Goat"
+  ],
+  "180": [
+    "Pigs"
+  ],
+  "181": [
+    "Fig",
+    "Anjura",
+    "Anjeer"
+  ],
+  "182": [
+    "Nearle Hannu"
+  ],
+  "183": [
+    "Nelli Kai"
+  ],
+  "184": [
+    "Bunch Beans"
+  ],
+  "185": [
+    "Maragensu"
+  ],
+  "186": [
+    "Skin And Hide"
+  ],
+  "187": [
+    "Rose",
+    "Loose"
+  ],
+  "188": [
+    "Jasmine"
+  ],
+  "189": [
+    "Kakada"
+  ],
+  "190": [
+    "Chrysanthemum",
+    "Loose"
+  ],
+  "191": [
+    "Astera"
+  ],
+  "192": [
+    "Kankambra"
+  ],
+  "193": [
+    "Tube Flower"
+  ],
+  "194": [
+    "Marigold",
+    "Calcutta"
+  ],
+  "195": [
+    "Honey"
+  ],
+  "196": [
+    "Millets"
+  ],
+  "197": [
+    "Cashew Kernnel"
+  ],
+  "198": [
+    "Polherb"
+  ],
+  "199": [
+    "Chennangi",
+    "Whole"
+  ],
+  "200": [
+    "Suram"
+  ],
+  "201": [
+    "Kuchur"
+  ],
+  "202": [
+    "Yam"
+  ],
+  "203": [
+    "Nargasi"
+  ],
+  "204": [
+    "Sompu"
+  ],
+  "205": [
+    "Sarasum"
+  ],
+  "206": [
+    "Rajgir"
+  ],
+  "207": [
+    "Ghee"
+  ],
+  "208": [
+    "Javi"
+  ],
+  "209": [
+    "Haralekai"
+  ],
+  "210": [
+    "Seegu"
+  ],
+  "211": [
+    "Pundi"
+  ],
+  "212": [
+    "Suva",
+    "Dill Seed"
+  ],
+  "213": [
+    "Isabgul",
+    "Psyllium"
+  ],
+  "214": [
+    "Moath Dal"
+  ],
+  "215": [
+    "Masur Dal"
+  ],
+  "216": [
+    "Arhar Dal",
+    "Tur Dal"
+  ],
+  "217": [
+    "Tamarind Fruit"
+  ],
+  "218": [
+    "Beaten Rice"
+  ],
+  "219": [
+    "Bengal Gram Dal",
+    "Chana Dal"
+  ],
+  "220": [
+    "Black Gram Dal",
+    "Urd Dal"
+  ],
+  "221": [
+    "Green Gram Dal",
+    "Moong Dal"
+  ],
+  "222": [
+    "Coconut Oil"
+  ],
+  "223": [
+    "Ground Nut Oil"
+  ],
+  "224": [
+    "Ground Nut Seed"
+  ],
+  "225": [
+    "Avare Dal"
+  ],
+  "226": [
+    "Castor Oil"
+  ],
+  "227": [
+    "Sajje"
+  ],
+  "228": [
+    "Butter"
+  ],
+  "229": [
+    "Dalda"
+  ],
+  "230": [
+    "Balekai"
+  ],
+  "231": [
+    "Gingelly Oil"
+  ],
+  "232": [
+    "Season Leaves"
+  ],
+  "233": [
+    "Dry Grapes"
+  ],
+  "234": [
+    "Gurellu"
+  ],
+  "235": [
+    "Lint"
+  ],
+  "236": [
+    "Alasande Gram"
+  ],
+  "237": [
+    "Ram"
+  ],
+  "238": [
+    "She Goat"
+  ],
+  "239": [
+    "Bullar"
+  ],
+  "240": [
+    "Sunflower Seed"
+  ],
+  "241": [
+    "Soji"
+  ],
+  "242": [
+    "Wheat Atta"
+  ],
+  "243": [
+    "Maida Atta"
+  ],
+  "244": [
+    "Bran"
+  ],
+  "245": [
+    "Sabu Dan"
+  ],
+  "246": [
+    "Broken Rice"
+  ],
+  "247": [
+    "Gramflour"
+  ],
+  "248": [
+    "Chennangi Dal"
+  ],
+  "249": [
+    "Elephant Yam",
+    "Suran"
+  ],
+  "250": [
+    "Yam",
+    "Ratalu"
+  ],
+  "251": [
+    "French Beans",
+    "Frasbean"
+  ],
+  "252": [
+    "Indian Beans",
+    "Seam"
+  ],
+  "253": [
+    "Surat Beans",
+    "Papadi"
+  ],
+  "254": [
+    "Pegeon Pea",
+    "Arhar Fali"
+  ],
+  "255": [
+    "Little gourd",
+    "Kundru"
+  ],
+  "256": [
+    "Pointed gourd",
+    "Parval"
+  ],
+  "257": [
+    "Long Melon",
+    "Kakri"
+  ],
+  "258": [
+    "Kartali",
+    "Kantola"
+  ],
+  "259": [
+    "Round gourd"
+  ],
+  "260": [
+    "Rat Tail Radish",
+    "Mogari"
+  ],
+  "261": [
+    "Peas cod"
+  ],
+  "262": [
+    "Turmeric",
+    "raw"
+  ],
+  "263": [
+    "Lemon"
+  ],
+  "264": [
+    "Sponge gourd"
+  ],
+  "265": [
+    "Groundnut pods",
+    "raw"
+  ],
+  "266": [
+    "Papaya",
+    "Raw"
+  ],
+  "267": [
+    "Groundnut",
+    "Split"
+  ],
+  "268": [
+    "Coca"
+  ],
+  "269": [
+    "Cinamon",
+    "Dalchini"
+  ],
+  "270": [
+    "Kacholam"
+  ],
+  "271": [
+    "Colacasia"
+  ],
+  "272": [
+    "Broomstick",
+    "Flower Broom"
+  ],
+  "273": [
+    "Bay leaf",
+    "Tejpatta"
+  ],
+  "274": [
+    "Resinwood"
+  ],
+  "275": [
+    "Torchwood"
+  ],
+  "276": [
+    "Mustard Oil"
+  ],
+  "277": [
+    "Almond",
+    "Badam"
+  ],
+  "278": [
+    "Apricot",
+    "Jardalu",
+    "Khumani"
+  ],
+  "279": [
+    "Persimon",
+    "Japani Fal"
+  ],
+  "280": [
+    "Cherry"
+  ],
+  "281": [
+    "Plum"
+  ],
+  "282": [
+    "Pear",
+    "Marasebu"
+  ],
+  "283": [
+    "Peach"
+  ],
+  "284": [
+    "Squash",
+    "Chappal Kadoo"
+  ],
+  "285": [
+    "Mahua"
+  ],
+  "286": [
+    "Kinnow"
+  ],
+  "287": [
+    "Lukad"
+  ],
+  "288": [
+    "Saffron"
+  ],
+  "289": [
+    "Lotus Sticks"
+  ],
+  "290": [
+    "Mashrooms"
+  ],
+  "291": [
+    "Turnip"
+  ],
+  "292": [
+    "Spinach"
+  ],
+  "293": [
+    "Walnut"
+  ],
+  "294": [
+    "Indian Colza",
+    "Sarson"
+  ],
+  "295": [
+    "Dry Fodder"
+  ],
+  "296": [
+    "Green Fodder"
+  ],
+  "297": [
+    "Peas",
+    "Dry"
+  ],
+  "298": [
+    "Wool"
+  ],
+  "299": [
+    "Tinda"
+  ],
+  "300": [
+    "Galgal",
+    "Lemon"
+  ],
+  "301": [
+    "Litchi"
+  ],
+  "302": [
+    "Custard Apple",
+    "Sharifa"
+  ],
+  "303": [
+    "Goat Hair"
+  ],
+  "304": [
+    "Camel Hair"
+  ],
+  "305": [
+    "Amla",
+    "Nelli Kai"
+  ],
+  "306": [
+    "Ber",
+    "Zizyphus",
+    "Borehannu"
+  ],
+  "307": [
+    "Onion Green"
+  ],
+  "308": [
+    "Gram Raw",
+    "Chholia"
+  ],
+  "309": [
+    "Mint",
+    "Pudina"
+  ],
+  "310": [
+    "Egypian Clover",
+    "Barseem"
+  ],
+  "311": [
+    "Kabuli Chana",
+    "Chickpeas-White"
+  ],
+  "312": [
+    "Gladiolus Cut Flower"
+  ],
+  "313": [
+    "Gladiolus Bulb"
+  ],
+  "314": [
+    "Flower Broom"
+  ],
+  "315": [
+    "Fish"
+  ],
+  "316": [
+    "Egg"
+  ],
+  "317": [
+    "Cock"
+  ],
+  "318": [
+    "Hen"
+  ],
+  "319": [
+    "Duck"
+  ],
+  "320": [
+    "Mahua Seed",
+    "Hippe seed"
+  ],
+  "321": [
+    "Khoya"
+  ],
+  "322": [
+    "Rose",
+    "Tata"
+  ],
+  "323": [
+    "Rose",
+    "Local"
+  ],
+  "324": [
+    "Carnation"
+  ],
+  "325": [
+    "Jarbara"
+  ],
+  "326": [
+    "Tube Rose",
+    "Single"
+  ],
+  "327": [
+    "Lilly"
+  ],
+  "328": [
+    "Anthorium"
+  ],
+  "329": [
+    "BOP"
+  ],
+  "330": [
+    "Orchid"
+  ],
+  "331": [
+    "Daila",
+    "Chandni"
+  ],
+  "332": [
+    "Tube Rose",
+    "Double"
+  ],
+  "333": [
+    "Chrysanthemum"
+  ],
+  "334": [
+    "Lotus"
+  ],
+  "335": [
+    "Patti Calcutta"
+  ],
+  "336": [
+    "Marigold",
+    "loose"
+  ],
+  "337": [
+    "Jaffri"
+  ],
+  "338": [
+    "Marget"
+  ],
+  "339": [
+    "Tube Rose",
+    "Loose"
+  ],
+  "340": [
+    "Raibel"
+  ],
+  "341": [
+    "Delha"
+  ],
+  "342": [
+    "Mahedi"
+  ],
+  "343": [
+    "White Peas"
+  ],
+  "344": [
+    "Guar Seed",
+    "Cluster Beans Seed"
+  ],
+  "345": [
+    "Paddy",
+    "Dhan",
+    "Basmati"
+  ],
+  "346": [
+    "Kutki"
+  ],
+  "347": [
+    "buttery"
+  ],
+  "348": [
+    "Ambady",
+    "Mesta"
+  ],
+  "349": [
+    "Bael"
+  ],
+  "350": [
+    "Amranthas Red"
+  ],
+  "351": [
+    "Other green and fresh vegetables"
+  ],
+  "352": [
+    "poppy seeds"
+  ],
+  "353": [
+    "mango powder"
+  ],
+  "354": [
+    "dried mango"
+  ],
+  "355": [
+    "nigella seeds"
+  ],
+  "356": [
+    "Poppy capsules"
+  ],
+  "357": [
+    "kutki"
+  ],
+  "358": [
+    "macoy"
+  ],
+  "359": [
+    "Muleti"
+  ],
+  "360": [
+    "White Muesli"
+  ],
+  "361": [
+    "stone pulverizer"
+  ],
+  "362": [
+    "pippali"
+  ],
+  "363": [
+    "liquor turmeric"
+  ],
+  "364": [
+    "sanay"
+  ],
+  "365": [
+    "Asparagus"
+  ],
+  "366": [
+    "basil"
+  ],
+  "367": [
+    "vadang"
+  ],
+  "368": [
+    "Vatsanabha"
+  ],
+  "369": [
+    "Chandrashoor"
+  ],
+  "370": [
+    "karanja seeds"
+  ],
+  "371": [
+    "stevia"
+  ],
+  "372": [
+    "Palash flowers"
+  ],
+  "373": [
+    "dhawai flowers"
+  ],
+  "374": [
+    "Ashwagandha"
+  ],
+  "375": [
+    "Asalia"
+  ],
+  "376": [
+    "nigella seeds"
+  ],
+  "377": [
+    "Muesli"
+  ],
+  "378": [
+    "Pupadia"
+  ],
+  "379": [
+    "Bhui Amlaya"
+  ],
+  "380": [
+    "Brahmi"
+  ],
+  "381": [
+    "Sandalwood"
+  ],
+  "382": [
+    "Absinthe"
+  ],
+  "383": [
+    "Giloy"
+  ],
+  "384": [
+    "Gudmar"
+  ],
+  "385": [
+    "Guggal"
+  ],
+  "386": [
+    "spikenard"
+  ],
+  "387": [
+    "Kalihari"
+  ],
+  "388": [
+    "Kalmegh"
+  ],
+  "389": [
+    "kokum"
+  ],
+  "390": [
+    "Kooth"
+  ],
+  "391": [
+    "Ratanjot"
+  ],
+  "392": [
+    "gulli"
+  ],
+  "393": [
+    "Glardia"
+  ],
+  "394": [
+    "tulip"
+  ],
+  "395": [
+    "sevanti"
+  ],
+  "396": [
+    "Irish"
+  ],
+  "397": [
+    "Sweet Sultan"
+  ],
+  "398": [
+    "cineraria"
+  ],
+  "399": [
+    "salvia"
+  ],
+  "400": [
+    "gypsophila"
+  ],
+  "401": [
+    "Limonia",
+    "status"
+  ],
+  "402": [
+    "Gamphrena"
+  ],
+  "403": [
+    "Cossandra"
+  ],
+  "404": [
+    "hydrangea"
+  ],
+  "405": [
+    "Heliconia species"
+  ],
+  "406": [
+    "golden rod"
+  ],
+  "407": [
+    "dianthus"
+  ],
+  "408": [
+    "sweet william"
+  ],
+  "409": [
+    "Clarkia"
+  ],
+  "410": [
+    "Lupine"
+  ],
+  "411": [
+    "Calendula"
+  ],
+  "412": [
+    "Kevda"
+  ],
+  "413": [
+    "balsam"
+  ],
+  "414": [
+    "Banana flower"
+  ],
+  "415": [
+    "Banana stem"
+  ],
+  "416": [
+    "Banana Leaf"
+  ],
+  "417": [
+    "Curry Leaf"
+  ],
+  "418": [
+    "Brocoli"
+  ],
+  "419": [
+    "Sundaikai"
+  ],
+  "420": [
+    "Perandai"
+  ],
+  "421": [
+    "Siru Kizhagu"
+  ],
+  "422": [
+    "Bajji chilli"
+  ],
+  "423": [
+    "Double Beans"
+  ],
+  "424": [
+    "Red Cabbage"
+  ],
+  "425": [
+    "Goose berry",
+    "Nellikkai"
+  ],
+  "426": [
+    "Dragon fruit"
+  ],
+  "427": [
+    "Water Apple"
+  ],
+  "428": [
+    "Bread Fruit"
+  ],
+  "429": [
+    "Wild lemon"
+  ],
+  "430": [
+    "Wood Apple"
+  ],
+  "431": [
+    "Nerium"
+  ],
+  "432": [
+    "kakatan"
+  ],
+  "433": [
+    "Marikozhunthu"
+  ],
+  "434": [
+    "Tulasi"
+  ],
+  "435": [
+    "Ma.Inji"
+  ],
+  "436": [
+    "Asgand"
+  ],
+  "437": [
+    "Ashoka"
+  ],
+  "438": [
+    "Atis"
+  ],
+  "439": [
+    "Behada"
+  ],
+  "440": [
+    "Chironji"
+  ],
+  "441": [
+    "Flax seeds"
+  ],
+  "442": [
+    "Gond"
+  ],
+  "443": [
+    "Harrah"
+  ],
+  "444": [
+    "Jaee"
+  ],
+  "445": [
+    "Khirni"
+  ],
+  "446": [
+    "Laha"
+  ],
+  "447": [
+    "Muskmelon Seeds"
+  ],
+  "448": [
+    "Rala"
+  ],
+  "449": [
+    "Ramphal"
+  ],
+  "450": [
+    "Rayee"
+  ],
+  "451": [
+    "Soha"
+  ],
+  "452": [
+    "Water chestnut"
+  ],
+  "453": [
+    "Wax"
+  ]
+}
