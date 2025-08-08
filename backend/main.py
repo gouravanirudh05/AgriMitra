@@ -2,17 +2,18 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from contextlib import asynccontextmanager
 import uvicorn
-import os
 
 from app.database import init_db
 from app.routers import auth, chat, users
+from agent import orchestrator  # ✅ so we can initialize agent
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
-    # Startup
+    # Startup logic
     await init_db()
+    await orchestrator.init_orchestrator()  # ✅ Build agent before first request
     yield
-    # Shutdown
+    # Shutdown logic
     pass
 
 # Initialize FastAPI app
@@ -26,7 +27,10 @@ app = FastAPI(
 # Add CORS middleware
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["http://localhost:3000", "http://127.0.0.1:3000"],  # Add your frontend URLs
+    allow_origins=[
+        "http://localhost:3000",
+        "http://127.0.0.1:3000"
+    ],
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
@@ -41,6 +45,9 @@ app.include_router(chat.router, prefix="/api", tags=["chat"])
 @app.get("/health")
 async def health_check():
     return {"status": "healthy", "message": "Farmer Agent API is running"}
+@app.on_event("startup")
+async def startup_event():
+    print("🚀 Starting AI Agent API...")
 
 if __name__ == "__main__":
     uvicorn.run(

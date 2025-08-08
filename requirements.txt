@@ -3,3 +3,5 @@ faiss-cpu
 PyPDF2 
 sentence-transformers 
 google-generativeai
+pandas
+pymupdf4llm
