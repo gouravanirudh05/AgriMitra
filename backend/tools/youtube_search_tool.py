@@ -1,0 +1,24 @@
+import requests
+import re
+from langchain.tools import tool
+
+def search_youtube_scrape(query: str) -> str:
+    search_url = "https://www.youtube.com/results?search_query=" + requests.utils.quote(query)
+    headers = {
+        "User-Agent": "Mozilla/5.0",
+        "Accept-Language": "en-US,en;q=0.9",
+    }
+    res = requests.get(search_url, headers=headers)
+
+    matches = re.findall(r"/watch\?v=[\w-]{11}", res.text)
+    if matches:
+        return "https://www.youtube.com" + matches[0]
+
+    return "No video found."
+
+@tool
+def youtube_search_tool(query: str) -> str:
+    """
+    Search YouTube and return the first video link.
+    """
+    return search_youtube_scrape(query)

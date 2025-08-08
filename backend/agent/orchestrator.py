@@ -9,6 +9,7 @@ from langchain.agents import initialize_agent, AgentType
 from langchain_google_genai import ChatGoogleGenerativeAI
 from langchain.memory import ConversationBufferWindowMemory
 from langchain.callbacks import StdOutCallbackHandler
+from tools.youtube_search_tool import youtube_search_tool
 
 # import datetime
 from datetime import date
@@ -138,7 +139,7 @@ class AgentOrchestrator:
             # Weather Tools
             weather_tool,
             weather_districts_tool,
-            
+            youtube_search_tool,
             # Market Price Tools
             get_market_price,
             list_market_commodities,
