@@ -6,19 +6,41 @@ import google.generativeai as genai
 from sentence_transformers import SentenceTransformer
 from typing import List
 import dotenv
+import pymupdf4llm
 dotenv.load_dotenv()
-PDF_PATHS = ["data/data1.pdf", "data/data2.pdf", "data/data3.pdf"]  
+import os
+from typing import List
+
+PDF_PATHS = ["data/data1.pdf", "data/data2.pdf", "data/data3.pdf"]
 INDEX_PATH = "faiss_store/index.faiss"
 META_PATH = "faiss_store/meta.pkl"
 CHUNK_SIZE = 500
 EMBEDDING_MODEL = "sentence-transformers/all-MiniLM-L6-v2"
 GOOGLE_API_KEY = os.getenv("GOOGLE_API_KEY")
+
+def find_pdfs_in_folder(folder_path: str, recursive: bool = True) -> List[str]:
+    pdf_paths = []
+    if recursive:
+        # Walk through folder and subfolders
+        for root, _, files in os.walk(folder_path):
+            for file in files:
+                if file.lower().endswith(".pdf"):
+                    print(f"Found PDF: {os.path.join(root, file)}")
+                    pdf_paths.append(os.path.join(root, file))
+    else:
+        # Only look in the top-level folder
+        for file in os.listdir(folder_path):
+            if file.lower().endswith(".pdf"):
+                pdf_paths.append(os.path.join(folder_path, file))
+    return pdf_paths
+
+PDF_PATHS = find_pdfs_in_folder("datasets", recursive=True)
+print(f"Found {len(PDF_PATHS)} PDFs in the 'datasets' folder.")
 def load_pdfs_and_chunk(pdf_paths: List[str], chunk_size: int) -> List[str]:
     all_chunks = []
     for path in pdf_paths:
         with open(path, "rb") as f:
-            reader = PyPDF2.PdfReader(f)
-            full_text = "\n".join([page.extract_text() for page in reader.pages if page.extract_text()])
+            full_text = pymupdf4llm.to_markdown(path)
         for i in range(0, len(full_text), chunk_size):
             chunk = full_text[i:i + chunk_size]
             if len(chunk.strip()) > 50:

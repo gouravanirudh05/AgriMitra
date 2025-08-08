@@ -22,8 +22,7 @@
     "Ambada Seed"
   ],
   "417": [
-    "Ambady",
-    "Mesta"
+    "Ambady/Mesta"
   ],
   "355": [
     "Amla",
@@ -1202,8 +1201,7 @@
     "salvia"
   ],
   "122": [
-    "Same",
-    "Savi"
+    "Same/Savi"
   ],
   "433": [
     "sanay"
@@ -1228,7 +1226,9 @@
   ],
   "11": [
     "Sesamum",
-    "Sesame,Gingelly,Til"
+    "Sesame",
+    "Gingelly",
+    "Til"
   ],
   "464": [
     "sevanti"

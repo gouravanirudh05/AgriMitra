@@ -1,14 +1,15 @@
-# app/routers/chat.py
-from fastapi import APIRouter, HTTPException, Request, BackgroundTasks
+# app/routers/chat.py - FIXED VERSION
+from fastapi import APIRouter, HTTPException, status, Request, BackgroundTasks
 from fastapi.responses import StreamingResponse
 from app.models import ChatMessage, ChatResponse
+from app.database import get_database
+from bson import ObjectId
 from datetime import datetime, timedelta
 import uuid
 import json
 import asyncio
 import logging
 from typing import Dict, Any, Optional
-from contextlib import asynccontextmanager
 
 # Import the enhanced orchestrator
 from agent.orchestrator import get_orchestrator, AgentOrchestrator
@@ -18,83 +19,8 @@ logger = logging.getLogger(__name__)
 
 router = APIRouter()
 
-# In-memory conversation store for demo (consider using Redis/DB in production)
-FAKE_DB = {"conversations": {}}
-
 # Global orchestrator instance
 orchestrator_instance: Optional[AgentOrchestrator] = None
-
-
-class ConversationManager:
-    """Manages conversation state and history"""
-    
-    @staticmethod
-    def get_or_create_conversation(user_id: str, conversation_id: Optional[str] = None) -> Dict[str, Any]:
-        """Get existing conversation or create a new one"""
-        if conversation_id and conversation_id in FAKE_DB["conversations"]:
-            conv = FAKE_DB["conversations"][conversation_id]
-            # Verify user ownership
-            if conv["userId"] != user_id:
-                raise HTTPException(status_code=403, detail="Access denied to conversation")
-            return conv
-        else:
-            # Create new conversation
-            conv_id = str(uuid.uuid4())
-            conv = {
-                "id": conv_id,
-                "userId": user_id,
-                "messages": [],
-                "createdAt": datetime.utcnow(),
-                "lastActivity": datetime.utcnow(),
-                "metadata": {}
-            }
-            FAKE_DB["conversations"][conv_id] = conv
-            return conv
-    
-    @staticmethod
-    def add_message(conversation: Dict[str, Any], text: str, is_user: bool, metadata: Optional[Dict] = None) -> str:
-        """Add a message to the conversation"""
-        message_id = str(uuid.uuid4())
-        message = {
-            "id": message_id,
-            "text": text,
-            "isUser": is_user,
-            "timestamp": datetime.utcnow(),
-            "metadata": metadata or {}
-        }
-        conversation["messages"].append(message)
-        conversation["lastActivity"] = datetime.utcnow()
-        return message_id
-    
-    @staticmethod
-    def get_recent_context(conversation: Dict[str, Any], max_messages: int = 10) -> str:
-        """Get recent conversation context for the agent"""
-        recent_messages = conversation["messages"][-max_messages:]
-        context = []
-        
-        for msg in recent_messages:
-            role = "User" if msg["isUser"] else "Assistant"
-            context.append(f"{role}: {msg['text']}")
-        
-        return "\n".join(context) if context else ""
-    
-    @staticmethod
-    def cleanup_old_conversations(max_age_hours: int = 24):
-        """Background task to clean up old conversations"""
-        try:
-            cutoff_time = datetime.utcnow() - timedelta(hours=max_age_hours)
-            
-            conversations_to_remove = []
-            for conv_id, conv in FAKE_DB["conversations"].items():
-                if conv["lastActivity"] < cutoff_time:
-                    conversations_to_remove.append(conv_id)
-            
-            for conv_id in conversations_to_remove:
-                del FAKE_DB["conversations"][conv_id]
-            
-            logger.info(f"Cleaned up {len(conversations_to_remove)} old conversations")
-        except Exception as e:
-            logger.error(f"Error during conversation cleanup: {e}")
 
 
 async def get_orchestrator_instance() -> AgentOrchestrator:
@@ -131,226 +57,207 @@ async def startup_event():
         orchestrator_instance = None
 
 
-@router.on_event("shutdown")
-async def shutdown_event():
-    """Cleanup when router shuts down"""
-    logger.info("🔄 Chat router shutting down...")
-    # Add any cleanup logic here if needed
-
-
 @router.post("/chat", response_model=ChatResponse)
-async def chat_endpoint(payload: ChatMessage, request: Request, background_tasks: BackgroundTasks):
-    """Main chat endpoint with orchestrator integration"""
-    
-    # Validate input
-    if not payload.userId or not payload.message:
-        raise HTTPException(status_code=400, detail="Missing userId or message")
-    
-    if not payload.message.strip():
-        raise HTTPException(status_code=400, detail="Message cannot be empty")
-    
-    # Get orchestrator
+async def chat_with_ai(chat_data: ChatMessage):
+    """Handle user query and return AI response using Orchestrator + Database"""
+    db = get_database()
+
     try:
-        orchestrator = await get_orchestrator_instance()
-        if orchestrator is None:
-            raise HTTPException(status_code=503, detail="Agent service unavailable")
-    except Exception as e:
-        logger.error(f"Failed to get orchestrator: {e}")
-        raise HTTPException(status_code=503, detail=f"Agent service error: {e}")
-    
-    # Get or create conversation
-    try:
-        conversation = ConversationManager.get_or_create_conversation(
-            payload.userId, 
-            payload.conversationId
-        )
-    except HTTPException:
-        raise  # Re-raise HTTP exceptions
-    except Exception as e:
-        logger.error(f"Conversation management error: {e}")
-        raise HTTPException(status_code=500, detail="Conversation management error")
-    
-    # Add user message
-    user_message_id = ConversationManager.add_message(
-        conversation, 
-        payload.message, 
-        is_user=True,
-        metadata={"source": "chat_endpoint"}
-    )
-    
-    logger.info(f"Processing message for user {payload.userId}: {payload.message[:100]}...")
-    
-    # Prepare context for the agent
-    recent_context = ConversationManager.get_recent_context(conversation, max_messages=8)
-    
-    # Enhanced query with context
-    enhanced_query = payload.message
-    if recent_context and len(conversation["messages"]) > 1:
-        # Only add context if there's previous conversation
-        enhanced_query = f"Context from recent conversation:\n{recent_context}\n\nCurrent question: {payload.message}"
-    
-    # Call orchestrator
-    start_time = datetime.utcnow()
-    try:
-        result = await orchestrator.query(
-            enhanced_query,
-            conversation_id=conversation["id"],
-            user_id=payload.userId
-        )
+        # Validate user (KEEPING ORIGINAL VALIDATION)
+        if not ObjectId.is_valid(chat_data.userId):
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="Invalid user ID format"
+            )
+
+        user = await db.users.find_one({"_id": ObjectId(chat_data.userId)})
+        if not user:
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail="User not found"
+            )
+
+        # Get orchestrator (NEW)
+        try:
+            orchestrator = await get_orchestrator_instance()
+            if orchestrator is None:
+                raise HTTPException(status_code=503, detail="Agent service unavailable")
+        except Exception as e:
+            logger.error(f"Failed to get orchestrator: {e}")
+            raise HTTPException(status_code=503, detail=f"Agent service error: {e}")
+
+        # Get conversation context for orchestrator
+        conversation_id = chat_data.conversationId or str(uuid.uuid4())
+        recent_context = ""
         
-        processing_time = (datetime.utcnow() - start_time).total_seconds()
-        
-        if not result['success']:
-            logger.error(f"Orchestrator query failed: {result['error']}")
-            # Add error message to conversation
-            fallback_response = "I apologize, but I encountered an error processing your request. Please try again or rephrase your question."
-            ConversationManager.add_message(
-                conversation,
-                fallback_response,
-                is_user=False,
-                metadata={"error": result['error'], "processing_time": processing_time}
+        if chat_data.conversationId:
+            # Get recent messages from database for context
+            existing_conv = await db.conversations.find_one({"id": conversation_id})
+            if existing_conv and existing_conv.get("messages"):
+                recent_messages = existing_conv["messages"][-8:]  # Last 8 messages
+                context_parts = []
+                for msg in recent_messages:
+                    role = "User" if msg["isUser"] else "Assistant"
+                    context_parts.append(f"{role}: {msg['text']}")
+                recent_context = "\n".join(context_parts)
+
+        # Prepare enhanced query with context
+        enhanced_query = chat_data.message
+        if recent_context:
+            enhanced_query = f"Context from recent conversation:\n{recent_context}\n\nCurrent question: {chat_data.message}"
+
+        # Get response from Orchestrator (CHANGED FROM AIService)
+        start_time = datetime.utcnow()
+        try:
+            result = await orchestrator.query(
+                enhanced_query,
+                conversation_id=conversation_id,
+                user_id=chat_data.userId
             )
             
-            # Return response instead of raising exception to avoid 500 error
-            return ChatResponse(
-                response=fallback_response,
-                conversationId=conversation["id"]
+            processing_time = (datetime.utcnow() - start_time).total_seconds()
+            
+            if not result['success']:
+                logger.error(f"Orchestrator query failed: {result['error']}")
+                raise HTTPException(
+                    status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+                    detail=f"AI service error: {result['error']}"
+                )
+            
+            ai_response = result['response']
+            
+        except HTTPException:
+            raise
+        except Exception as e:
+            processing_time = (datetime.utcnow() - start_time).total_seconds()
+            logger.error(f"Unexpected error during query processing: {e}")
+            raise HTTPException(
+                status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+                detail=f"Chat failed: {str(e)}"
             )
-        
-        response_text = result['response']
-        
+
+        # Format messages (KEEPING ORIGINAL FORMAT)
+        user_msg = {
+            "id": str(uuid.uuid4()),
+            "text": chat_data.message,
+            "isUser": True,
+            "timestamp": datetime.utcnow()
+        }
+
+        ai_msg = {
+            "id": str(uuid.uuid4()),
+            "text": ai_response,
+            "isUser": False,
+            "timestamp": datetime.utcnow(),
+            "metadata": {
+                "processing_time": processing_time,
+                "tools_used": result.get('tools_used', [])
+            }
+        }
+
+        # Save to conversation (KEEPING ORIGINAL DATABASE LOGIC)
+        existing = await db.conversations.find_one({"id": conversation_id})
+        if existing:
+            await db.conversations.update_one(
+                {"id": conversation_id},
+                {"$push": {"messages": {"$each": [user_msg, ai_msg]}}}
+            )
+        else:
+            conv_doc = {
+                "id": conversation_id,
+                "userId": chat_data.userId,
+                "title": chat_data.message[:50] + ("..." if len(chat_data.message) > 50 else ""),
+                "messages": [user_msg, ai_msg],
+                "createdAt": datetime.utcnow()
+            }
+            await db.conversations.insert_one(conv_doc)
+
+        return ChatResponse(response=ai_response, conversationId=conversation_id)
+
     except HTTPException:
-        raise  # Re-raise HTTP exceptions
+        raise
     except Exception as e:
-        processing_time = (datetime.utcnow() - start_time).total_seconds()
-        logger.error(f"Unexpected error during query processing: {e}")
-        
-        # Add fallback message
-        fallback_response = "I'm sorry, I encountered an unexpected error. Please try again later."
-        ConversationManager.add_message(
-            conversation,
-            fallback_response,
-            is_user=False,
-            metadata={"error": str(e), "processing_time": processing_time, "fallback": True}
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Chat failed: {str(e)}"
         )
-        
-        # Return response instead of raising exception to avoid 500 error
-        return ChatResponse(
-            response=fallback_response,
-            conversationId=conversation["id"]
-        )
-    
-    # Add AI response to conversation
-    ai_message_id = ConversationManager.add_message(
-        conversation,
-        response_text,
-        is_user=False,
-        metadata={
-            "processing_time": processing_time,
-            "tools_used": result.get('tools_used', []),
-            "model_used": orchestrator.config.get('model', 'unknown') if hasattr(orchestrator, 'config') else 'unknown'
-        }
-    )
-    
-    # Schedule background cleanup with error handling
+
+
+# KEEPING ORIGINAL DATABASE-BASED ENDPOINTS
+@router.get("/conversations/{user_id}")
+async def get_user_conversations(user_id: str):
+    """Get all conversations for a user"""
+    db = get_database()
+
     try:
-        background_tasks.add_task(ConversationManager.cleanup_old_conversations)
+        if not ObjectId.is_valid(user_id):
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="Invalid user ID format"
+            )
+
+        conversations = await db.conversations.find(
+            {"userId": user_id}
+        ).sort("createdAt", -1).limit(50).to_list(length=50)
+
+        return [
+            {
+                "id": c["id"],
+                "userId": c["userId"],
+                "title": c["title"],
+                "messages": c["messages"],
+                "createdAt": c["createdAt"]
+            } for c in conversations
+        ]
+
     except Exception as e:
-        logger.error(f"Failed to schedule cleanup task: {e}")
-        # Don't fail the request if cleanup scheduling fails
-    
-    logger.info(f"✅ Response generated in {processing_time:.2f}s for user {payload.userId}")
-    
-    return ChatResponse(
-        response=response_text,
-        conversationId=conversation["id"]
-    )
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Failed to get conversations: {str(e)}"
+        )
 
 
-@router.post("/chat/stream")
-async def chat_stream_endpoint(payload: ChatMessage, request: Request):
-    """Streaming chat endpoint (for future implementation)"""
-    # Placeholder for streaming implementation
-    raise HTTPException(status_code=501, detail="Streaming not implemented yet")
+@router.get("/conversations/{conversation_id}/messages")
+async def get_conversation_messages(conversation_id: str):
+    """Get messages for a specific conversation"""
+    db = get_database()
+
+    try:
+        conversation = await db.conversations.find_one({"id": conversation_id})
+        if not conversation:
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail="Conversation not found"
+            )
+        return conversation.get("messages", [])
+
+    except Exception as e:
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Failed to get messages: {str(e)}"
+        )
 
 
-@router.get("/conversations/{conversation_id}")
-async def get_conversation(conversation_id: str, user_id: str):
-    """Get conversation history"""
-    if conversation_id not in FAKE_DB["conversations"]:
-        raise HTTPException(status_code=404, detail="Conversation not found")
-    
-    conversation = FAKE_DB["conversations"][conversation_id]
-    
-    if conversation["userId"] != user_id:
-        raise HTTPException(status_code=403, detail="Access denied")
-    
-    return {
-        "id": conversation["id"],
-        "userId": conversation["userId"],
-        "messages": conversation["messages"],
-        "createdAt": conversation["createdAt"],
-        "lastActivity": conversation["lastActivity"],
-        "messageCount": len(conversation["messages"])
-    }
-
-
-@router.get("/conversations")
-async def list_conversations(user_id: str, limit: int = 10, offset: int = 0):
-    """List user's conversations"""
-    user_conversations = [
-        {
-            "id": conv["id"],
-            "createdAt": conv["createdAt"],
-            "lastActivity": conv["lastActivity"],
-            "messageCount": len(conv["messages"]),
-            "preview": conv["messages"][-1]["text"][:100] + "..." if conv["messages"] else ""
-        }
-        for conv in FAKE_DB["conversations"].values()
-        if conv["userId"] == user_id
-    ]
-    
-    # Sort by last activity (newest first)
-    user_conversations.sort(key=lambda x: x["lastActivity"], reverse=True)
-    
-    # Apply pagination
-    paginated = user_conversations[offset:offset + limit]
-    
-    return {
-        "conversations": paginated,
-        "total": len(user_conversations),
-        "limit": limit,
-        "offset": offset
-    }
-
-
-@router.delete("/conversations/{conversation_id}")
-async def delete_conversation(conversation_id: str, user_id: str):
-    """Delete a conversation"""
-    if conversation_id not in FAKE_DB["conversations"]:
-        raise HTTPException(status_code=404, detail="Conversation not found")
-    
-    conversation = FAKE_DB["conversations"][conversation_id]
-    
-    if conversation["userId"] != user_id:
-        raise HTTPException(status_code=403, detail="Access denied")
-    
-    del FAKE_DB["conversations"][conversation_id]
-    
-    return {"message": "Conversation deleted successfully"}
-
-
+# NEW ENDPOINTS FOR DEBUGGING/MONITORING
 @router.get("/health")
 async def chat_health_check():
     """Health check endpoint for chat service"""
     try:
+        db = get_database()
         orchestrator = await get_orchestrator_instance()
         orchestrator_health = orchestrator.health_check() if orchestrator else {"status": {"orchestrator": "not_available"}}
+        
+        # Test database connection
+        try:
+            await db.conversations.count_documents({}, limit=1)
+            db_status = "healthy"
+        except:
+            db_status = "unhealthy"
         
         return {
             "status": "healthy",
             "timestamp": datetime.utcnow().isoformat(),
-            "conversations_count": len(FAKE_DB["conversations"]),
+            "database": db_status,
             "orchestrator": orchestrator_health["status"],
             "tools_available": len(orchestrator.tools) if orchestrator else 0
         }
@@ -393,4 +300,3 @@ async def debug_query(payload: dict):
         
     except Exception as e:
         return {"success": False, "error": str(e)}
-    

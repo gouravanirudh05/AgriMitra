@@ -5,7 +5,10 @@ from bs4 import BeautifulSoup
 import requests
 import pandas as pd
 import re
-
+from rapidfuzz import fuzz, process
+from langchain.tools import tool
+import os
+from datetime import date
 global_headers = {
             'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/138.0.0.0 Safari/537.36',
             'Referer': 'https://agmarknet.gov.in/',
@@ -58,7 +61,7 @@ def find_closest_state_id(query, crop_dict, threshold=50):
 
 # Load the JSON from file
 # crop_data = load_data("commodities.json")
-states = load_data("states.json")
+
 
 # Example usage
 # query = "wheet"
@@ -220,21 +223,91 @@ def log_request_and_response(response):
     print(response.text[:500])
     print("=========================\n")
 
-session = requests.Session()
-r = session.get("https://agmarknet.gov.in/")
-# log_request_and_response(r)
-crop_data = (get_dropdown_options(session,"https://agmarknet.gov.in/","ddlCommodity"))
+# session = requests.Session()
+# r = session.get("https://agmarknet.gov.in/")
+# # log_request_and_response(r)
+# crop_data = (get_dropdown_options(session,"https://agmarknet.gov.in/","ddlCommodity"))
 
 
-markdown_result = get_agmarknet_data(
-    session=session,
-    commodity_id=find_closest_crop_id("Arecanut",crop_data),
-    state_id=find_closest_state_id("Karnataka",states),
-    commodity_name=crop_data[find_closest_crop_id("Arecanut",crop_data)],
-    state_name=states[find_closest_state_id("Karnataka",states)],
-    start_dt="01-08-2025",
-    end_dt="07-08-2025",
-    # district_name="Koppa"  # Optional
-)
+# markdown_result = get_agmarknet_data(
+#     session=session,
+#     commodity_id=find_closest_crop_id("Arecanut",crop_data),
+#     state_id=find_closest_state_id("Karnataka",states),
+#     commodity_name=crop_data[find_closest_crop_id("Arecanut",crop_data)],
+#     state_name=states[find_closest_state_id("Karnataka",states)],
+#     start_dt="01-08-2025",
+#     end_dt="07-08-2025",
+#     # district_name="Koppa"  # Optional
+# )
+# Get the folder where this script is located
+BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 
-print(markdown_result)
+# Build absolute path to states.json
+states_path = os.path.join(BASE_DIR, "../../datasets/agrimarket/states.json")
+
+# Normalize the path
+states_path = os.path.normpath(states_path)
+states = load_data(states_path)
+
+@tool("get_market_price", return_direct=True)
+def get_market_price(state: str, commodity: str, start_date: str, end_date: str, district: str = None) -> str:
+    """
+    Fetches market price data for a given state, commodity, and date range from Agmarknet.
+
+    Args:
+        state (str): Name of the state (e.g., "Karnataka").
+        commodity (str): Name of the commodity (e.g., "Arecanut").
+        start_date (str): Start date in DD-MM-YYYY format.
+        end_date (str): End date in DD-MM-YYYY format.
+        district (str, optional): District name. Defaults to None.
+
+    Returns:
+        str: Markdown-formatted table of market prices.
+    """
+    # Start session
+    session = requests.Session()
+    r = session.get("https://agmarknet.gov.in/")
+    # start_date = date.strftime(date.today(), "%d-%m-%Y")
+    # end_date = date.strftime(date.today(), "%d-%m-%Y")
+    
+    # Get dropdown data
+    crop_data = get_dropdown_options(session, "https://agmarknet.gov.in/", "ddlCommodity")
+    
+    # Find IDs
+    commodity_id = find_closest_crop_id(commodity, crop_data)
+    state_id = find_closest_state_id(state, states)
+    # Prepare kwargs for query
+    kwargs = dict(
+        session=session,
+        commodity_id=commodity_id,
+        state_id=state_id,
+        commodity_name=crop_data[commodity_id],
+        state_name=states[state_id],
+        start_dt=start_date,
+        end_dt=end_date
+    )
+    if district:
+        kwargs["district_name"] = district
+    
+    # Fetch data
+    markdown_result = get_agmarknet_data(**kwargs)
+    return markdown_result
+
+@tool  
+def list_market_commodities() -> str:
+    """List available commodities for market price queries"""
+    try:
+        session = requests.Session()
+        r = session.get("https://agmarknet.gov.in/")
+        return get_dropdown_options(session, "https://agmarknet.gov.in/", "ddlCommodity")
+    except Exception as e:
+        return f"❌ Error listing commodities: {e}"
+
+
+@tool
+def list_market_states() -> str:
+    """List available states for market price queries"""
+    try:
+        return states
+    except Exception as e:
+        return f"❌ Error listing states: {e}"

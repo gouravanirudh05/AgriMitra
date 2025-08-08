@@ -9,12 +9,15 @@ from langchain.agents import initialize_agent, AgentType
 from langchain_google_genai import ChatGoogleGenerativeAI
 from langchain.memory import ConversationBufferWindowMemory
 from langchain.callbacks import StdOutCallbackHandler
+
+# import datetime
+from datetime import date
 dotenv.load_dotenv()
 # Import all tools
 from tools.rag_tool import rag_tool
 from tools.weather_tool import weather_tool, weather_districts_tool
 #from ..tools.market_price import market_price_tool, list_market_commodities, list_market_states
-from tools.market_price import market_price_tool,list_market_commodities,list_market_states
+from tools.agri_market import get_market_price,list_market_commodities,list_market_states
 # Set up logging
 logging.basicConfig(
     level=logging.INFO,
@@ -137,7 +140,7 @@ class AgentOrchestrator:
             weather_districts_tool,
             
             # Market Price Tools
-            market_price_tool,
+            get_market_price,
             list_market_commodities,
             list_market_states,
         ]
@@ -192,7 +195,12 @@ class AgentOrchestrator:
     
     def _get_system_message(self) -> str:
         """Get system message for the agent"""
-        return """You are a helpful AI assistant with access to multiple specialized tools for providing information about weather, agricultural market prices, and knowledge base queries.
+        # get today's date. 
+        today = date.today()
+        today_str = today.strftime("%d-%m-%Y")
+        return """  
+        Today's date is {today_str}.
+        You are a helpful AI assistant with access to multiple specialized tools for providing information about weather, agricultural market prices, and knowledge base queries.
 
 **Available Tools:**
 - **Knowledge Search (RAG)**: Search documentation, policies, and knowledge bases
