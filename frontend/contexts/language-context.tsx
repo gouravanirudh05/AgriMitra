@@ -16,7 +16,7 @@ const LanguageContext = createContext<LanguageContextType | undefined>(undefined
 const translations = {
   en: {
     // Auth
-    "auth.welcome": "Welcome to FarmAgent",
+    "auth.welcome": "Welcome to AgriMitra",
     "auth.login": "Login",
     "auth.register": "Register",
     "auth.email": "Email",
@@ -78,7 +78,7 @@ const translations = {
     "landing.hero.getStarted": "Get Started",
     "landing.hero.learnMore": "Learn More",
 
-    "landing.features.title": "Why Choose FarmAgent?",
+    "landing.features.title": "Why Choose AgriMitra?",
     "landing.features.subtitle": "Empowering farmers with intelligent technology",
     "landing.features.chat.title": "Smart Chat Assistant",
     "landing.features.chat.description":
@@ -96,19 +96,27 @@ const translations = {
     "landing.benefits.personalized.title": "Personalized Advice",
     "landing.benefits.personalized.description": "Recommendations based on your location and crops",
     "landing.benefits.farmers": "10,000+",
-    "landing.benefits.helping": "Farmers already using FarmAgent",
+    "landing.benefits.helping": "Farmers already using AgriMitra",
 
     "landing.cta.title": "Ready to Transform Your Farming?",
     "landing.cta.subtitle": "Join thousands of farmers who are already benefiting from AI-powered assistance",
     "landing.cta.button": "Start Your Journey",
 
-    "landing.footer.copyright": "© 2024 FarmAgent. All rights reserved.",
+    "landing.footer.copyright": "© 2024 AgriMitra. All rights reserved.",
 
     // Nav
     "nav.dashboard": "Dashboard",
+    "nav.openprofile": "Open Profile",
     "nav.settings": "Settings",
     "nav.help": "Help",
     "nav.logout": "Logout",
+
+    "profile.editProfile": "Edit Profile",
+    "profile.saveChanges": "Save Changes",
+    "profile.name": "Name",
+    "profile.age": "Age",
+    "profile.state": "State",
+    "profile.district": "District",
   },
   hi: {
     // Auth
@@ -167,6 +175,7 @@ const translations = {
     "common.error": "कुछ गलत हुआ",
     "common.retry": "पुनः प्रयास",
     "common.cancel": "रद्द करें",
+    
 
     // Landing page
     "landing.hero.title": "आधुनिक किसानों के लिए AI-संचालित सहायक",
@@ -201,9 +210,18 @@ const translations = {
 
     // Nav
     "nav.dashboard": "डैशबोर्ड",
+    "nav.openprofile": "प्रोफाइल खोलें",
     "nav.settings": "सेटिंग्स",
     "nav.help": "सहायता",
     "nav.logout": "लॉगआउट",
+
+    // Profile
+    "profile.editProfile": "प्रोफाइल संपादित करें",
+    "profile.saveChanges": "परिवर्तनों को सहेजें",
+    "profile.name": "नाम",
+    "profile.age": "उम्र",
+    "profile.state": "राज्य",
+    "profile.district": "जिल्हा",
   },
   kn: {
     // Auth
