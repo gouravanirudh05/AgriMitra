@@ -6,6 +6,7 @@ import { useLanguage } from "@/contexts/language-context"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Card, CardContent } from "@/components/ui/card"
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog"
 import { ScrollArea } from "@/components/ui/scroll-area"
 import { useToast } from "@/hooks/use-toast"
 import {
@@ -31,6 +32,7 @@ import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from "@/co
 import LanguageSelector from "./language-selector"
 import Markdown from 'react-markdown'
 import remarkGfm from 'remark-gfm'
+import ProfileEditScreen from "@/components/profile-edit"
 
 interface Message {
   id: string
@@ -54,6 +56,7 @@ export default function ChatScreen() {
   const [isLoading, setIsLoading] = useState(false)
   const [showTextInput, setShowTextInput] = useState(false)
   const [audioLevel, setAudioLevel] = useState(0)
+  const [openProfileEdit, setOpenProfileEdit] = useState(false)
 
   const { user, logout } = useAuth()
   const { t, language } = useLanguage()
@@ -570,10 +573,9 @@ export default function ChatScreen() {
                   <Plus className="h-5 w-5 mr-3" />
                   {t("chat.newChat")}
                 </Button>
-
-                <Button variant="outline" className="w-full justify-start h-12 bg-transparent">
+                <Button variant="outline" className="w-full justify-start h-12 bg-transparent" onClick={() => setOpenProfileEdit(true)}>
                   <Home className="h-5 w-5 mr-3" />
-                  {t("nav.dashboard")}
+                  {t("nav.openprofile")}
                 </Button>
               </div>
 
@@ -715,6 +717,19 @@ export default function ChatScreen() {
           </div>
         </>
       )}
+      <Dialog open={openProfileEdit} onOpenChange={setOpenProfileEdit}>
+
+      <DialogContent className="max-w-2xl p-0 overflow-hidden">
+        <DialogHeader className="p-4 border-b">
+          <DialogTitle>Edit Profile</DialogTitle>
+        </DialogHeader>
+
+        {/* Wrap profile screen content */}
+        <div className="p-4">
+          <ProfileEditScreen />
+        </div>
+      </DialogContent>
+    </Dialog>
     </div>
   )
 }

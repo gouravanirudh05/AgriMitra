@@ -24,7 +24,7 @@ export default function LandingPage() {
           <div className="p-2 bg-green-600 rounded-lg">
             <Sprout className="h-6 w-6 text-white" />
           </div>
-          <span className="text-2xl font-bold text-green-800">FarmAgent</span>
+          <span className="text-2xl font-bold text-green-800">AgriMitra</span>
         </div>
         <LanguageSelector />
       </header>
@@ -157,7 +157,7 @@ export default function LandingPage() {
             <div className="p-2 bg-green-600 rounded-lg">
               <Sprout className="h-5 w-5 text-white" />
             </div>
-            <span className="text-xl font-bold">FarmAgent</span>
+            <span className="text-xl font-bold">AgriMitra</span>
           </div>
           <p className="text-gray-400">{t("landing.footer.copyright")}</p>
         </div>

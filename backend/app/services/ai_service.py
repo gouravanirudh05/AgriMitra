@@ -60,14 +60,11 @@ class AIService:
         try:
             context = AIService.get_farming_context(user_data, language)
             retrieved_chunks = AIService.rag_service.retrieve_relevant_chunks(message)
-
             # Prompt with context
             full_prompt = (
                 f"{context}\n\n"
                 f"Context from documents:\n"
-                f"{retrieved_chunks[0]}\n\n"
-                f"{retrieved_chunks[1]}\n\n"
-                f"{retrieved_chunks[2]}\n\n"
+                f"{'\n\n'.join(retrieved_chunks)}"
                 f"User question: {message}"
             )
 

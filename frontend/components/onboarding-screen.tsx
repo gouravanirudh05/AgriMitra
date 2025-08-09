@@ -9,38 +9,10 @@ import { Label } from "@/components/ui/label"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Progress } from "@/components/ui/progress"
-import { ArrowRight, User, MapPin, CheckCircle } from "lucide-react"
+import { ArrowRight, User, MapPin, CheckCircle, Globe } from "lucide-react"
 
-const indianStates = [
-  "Andhra Pradesh",
-  "Arunachal Pradesh",
-  "Assam",
-  "Bihar",
-  "Chhattisgarh",
-  "Goa",
-  "Gujarat",
-  "Haryana",
-  "Himachal Pradesh",
-  "Jharkhand",
-  "Karnataka",
-  "Kerala",
-  "Madhya Pradesh",
-  "Maharashtra",
-  "Manipur",
-  "Meghalaya",
-  "Mizoram",
-  "Nagaland",
-  "Odisha",
-  "Punjab",
-  "Rajasthan",
-  "Sikkim",
-  "Tamil Nadu",
-  "Telangana",
-  "Tripura",
-  "Uttar Pradesh",
-  "Uttarakhand",
-  "West Bengal",
-]
+// Example JSON data
+import {statesData} from "../lib/states.js"
 
 export default function OnboardingScreen() {
   const [step, setStep] = useState(1)
@@ -52,13 +24,12 @@ export default function OnboardingScreen() {
   })
 
   const { updateProfile } = useAuth()
-  const { t } = useLanguage()
+  const { t, changeLanguage, currentLanguage } = useLanguage()
 
   const handleNext = () => {
     if (step < 2) {
       setStep(step + 1)
     } else {
-      // Complete onboarding
       updateProfile({
         name: formData.name,
         age: Number.parseInt(formData.age),
@@ -75,6 +46,13 @@ export default function OnboardingScreen() {
     }
     return formData.state && formData.district.trim()
   }
+
+  // Get list of states from JSON
+  const stateList = statesData.states.map((s) => s.state)
+
+  // Get districts based on selected state
+  const selectedStateObj = statesData.states.find((s) => s.state === formData.state)
+  const districtList = selectedStateObj ? selectedStateObj.districts : []
 
   return (
     <div className="flex items-center justify-center min-h-screen p-4 bg-gradient-to-br from-green-50 to-blue-50">
@@ -99,6 +77,18 @@ export default function OnboardingScreen() {
         <CardContent className="space-y-6">
           {step === 1 ? (
             <div className="space-y-4">
+              {/* Language button */}
+              <div className="flex justify-end">
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => changeLanguage(currentLanguage === "en" ? "hi" : "en")}
+                >
+                  <Globe className="mr-2 h-4 w-4" />
+                  {currentLanguage}
+                </Button>
+              </div>
+
               <div className="space-y-2">
                 <Label htmlFor="name" className="text-base font-medium">
                   {t("onboarding.name")} *
@@ -134,12 +124,15 @@ export default function OnboardingScreen() {
                 <Label htmlFor="state" className="text-base font-medium">
                   {t("onboarding.state")} *
                 </Label>
-                <Select value={formData.state} onValueChange={(value) => setFormData({ ...formData, state: value })}>
+                <Select
+                  value={formData.state}
+                  onValueChange={(value) => setFormData({ ...formData, state: value, district: "" })}
+                >
                   <SelectTrigger className="h-12 text-base">
                     <SelectValue placeholder={t("onboarding.statePlaceholder")} />
                   </SelectTrigger>
                   <SelectContent>
-                    {indianStates.map((state) => (
+                    {stateList.map((state) => (
                       <SelectItem key={state} value={state} className="text-base">
                         {state}
                       </SelectItem>
@@ -148,18 +141,28 @@ export default function OnboardingScreen() {
                 </Select>
               </div>
 
-              <div className="space-y-2">
-                <Label htmlFor="district" className="text-base font-medium">
-                  {t("onboarding.district")} *
-                </Label>
-                <Input
-                  id="district"
-                  value={formData.district}
-                  onChange={(e) => setFormData({ ...formData, district: e.target.value })}
-                  className="h-12 text-base"
-                  placeholder={t("onboarding.districtPlaceholder")}
-                />
-              </div>
+              {formData.state && (
+                <div className="space-y-2">
+                  <Label htmlFor="district" className="text-base font-medium">
+                    {t("onboarding.district")} *
+                  </Label>
+                  <Select
+                    value={formData.district}
+                    onValueChange={(value) => setFormData({ ...formData, district: value })}
+                  >
+                    <SelectTrigger className="h-12 text-base">
+                      <SelectValue placeholder={t("onboarding.districtPlaceholder")} />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {districtList.map((district) => (
+                        <SelectItem key={district} value={district} className="text-base">
+                          {district}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+              )}
             </div>
           )}
 
@@ -176,7 +179,6 @@ export default function OnboardingScreen() {
               </>
             )}
           </Button>
-
           {step === 1 && <p className="text-sm text-gray-500 text-center">{t("onboarding.privacy")}</p>}
         </CardContent>
       </Card>

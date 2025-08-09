@@ -25,7 +25,7 @@ class RAGService:
             chunks = pickle.load(f)
         return index, chunks
 
-    def retrieve_relevant_chunks(self, query: str, k: int = 3) -> List[str]:
+    def retrieve_relevant_chunks(self, query: str, k: int = 10) -> List[str]:
         query_embedding = self.embedding_model.encode([query])
         D, I = self.index.search(query_embedding, k)
         return [self.chunks[i] for i in I[0]]

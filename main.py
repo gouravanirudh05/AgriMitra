@@ -14,7 +14,7 @@ from typing import List
 PDF_PATHS = ["data/data1.pdf", "data/data2.pdf", "data/data3.pdf"]
 INDEX_PATH = "faiss_store/index.faiss"
 META_PATH = "faiss_store/meta.pkl"
-CHUNK_SIZE = 500
+CHUNK_SIZE = 1024
 EMBEDDING_MODEL = "sentence-transformers/all-MiniLM-L6-v2"
 GOOGLE_API_KEY = os.getenv("GOOGLE_API_KEY")
 
