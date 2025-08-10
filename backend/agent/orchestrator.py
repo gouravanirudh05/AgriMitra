@@ -6,7 +6,7 @@ import asyncio
 from pathlib import Path
 import dotenv
 from datetime import date
-
+import re
 # LangGraph imports
 from langgraph.graph import StateGraph, START, MessagesState, END
 from langgraph.types import Command, Send
@@ -16,6 +16,7 @@ from langchain_core.messages import convert_to_messages, HumanMessage, AIMessage
 # Try to import create_react_agent, fall back to custom implementation
 try:
     from langgraph.prebuilt import create_react_agent, InjectedState
+    from langgraph_supervisor import create_supervisor
     LANGGRAPH_REACT_AVAILABLE = True
 except ImportError:
     try:
@@ -123,7 +124,7 @@ class LangGraphSupervisorOrchestrator:
             # Routing LLM with higher temperature for better reasoning
             self.routing_llm = ChatGoogleGenerativeAI(
                 model=self.config['model'],
-                temperature=0.1,  # Slightly higher for routing decisions
+                temperature=0.2,  # Slightly higher for routing decisions
                 convert_system_message_to_human=True,
                 safety_settings={
                     7: 0, 8: 0, 9: 0, 10: 0
@@ -134,23 +135,7 @@ class LangGraphSupervisorOrchestrator:
             
         except Exception as e:
             logger.error(f"Failed to initialize LLM: {e}")
-            try:
-                logger.info("Attempting LLM initialization without safety settings...")
-                self.llm = ChatGoogleGenerativeAI(
-                    model=self.config['model'],
-                    temperature=self.config['temperature'],
-                    convert_system_message_to_human=True
-                )
-                self.routing_llm = ChatGoogleGenerativeAI(
-                    model=self.config['model'],
-                    temperature=0.1,
-                    convert_system_message_to_human=True
-                )
-                logger.info(f"LLMs initialized without safety settings: {self.config['model']}")
-            except Exception as e2:
-                logger.error(f"Failed to initialize LLM without safety settings: {e2}")
-                raise RuntimeError(f"LLM initialization failed: {e2}")
-    
+
     def _initialize_memory(self):
         """Initialize conversation memory"""
         try:
@@ -223,13 +208,15 @@ Response with ONLY the agent name (weather, youtube, market, or knowledge):"""
             routing_message = HumanMessage(content=routing_prompt)
             response = await self.routing_llm.ainvoke([routing_message])
             
-            # Extract agent name from response
-            agent_choice = response.content.strip().lower()
+            # # Extract agent name from response
+            agent_choice = re.search(r'\b(weather|youtube|market|knowledge)\b', response.content.lower())
+            agent_choice = agent_choice.group(1) if agent_choice else response.content.strip().lower()
             
             # Validate and clean the response
-            valid_agents = list(self.subagents.keys())
+            valid_agents = [a.lower() for a in self.subagents.keys()]
             
             # Direct match
+            
             if agent_choice in valid_agents:
                 logger.info(f"🎯 Gemini routed '{query[:50]}...' -> {agent_choice}")
                 return agent_choice
@@ -487,13 +474,14 @@ Response with ONLY the agent name (weather, youtube, market, or knowledge):"""
             # First, add the supervisor node
             if LANGGRAPH_REACT_AVAILABLE:
                 logger.info("Using create_react_agent for supervisor")
+
                 # Create handoff tools
-                handoff_tools = self._create_subagent_handoff_tools()
+                # handoff_tools = self._create_subagent_handoff_tools()
                 
                 # Create supervisor agent
                 supervisor_agent = create_react_agent(
                     model=self.routing_llm,  # Use routing LLM for supervisor
-                    tools=handoff_tools,
+                    # tools=handoff_tools,
                     prompt=self._get_supervisor_system_message(),
                     name="supervisor"
                 )

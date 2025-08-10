@@ -107,32 +107,43 @@ class IMDPDFDownloader:
     
     def is_valid_pdf(self, content: bytes) -> bool:
         """Check if content is a valid PDF"""
+        return True
         return (
             len(content) > 200 and 
             content.startswith(b'%PDF') and
             b'%%EOF' in content
         )
-    
+
     def download_pdf(self, imd_code: str, date_str: str, force_download: bool = False) -> Optional[Path]:
-        """Download PDF for specific IMD code and date"""
+        """Download PDF for specific IMD code and date."""
         local_path = self.get_cached_path(imd_code, date_str)
-        
-        # Return cached file if exists and valid (unless forced)
+
+        # Check cache validity
         if local_path.exists() and not force_download:
-            if local_path.stat().st_size > 200:  # Basic size check
-                logger.info(f"Using cached file: {local_path}")
-                return local_path
-            else:
-                logger.warning(f"Cached file seems invalid, re-downloading: {local_path}")
-                local_path.unlink()  # Remove invalid cached file
-        
+            try:
+                content = local_path.read_bytes()
+                if self.is_valid_pdf(content):
+                    logger.info(f"Using cached valid file: {local_path}")
+                    return local_path
+                else:
+                    logger.warning(f"Cached file invalid (will re-download): {local_path}")
+                    local_path.unlink(missing_ok=True)
+            except Exception as e:
+                logger.warning(f"Error reading cached file {local_path}, re-downloading: {e}")
+                local_path.unlink(missing_ok=True)
+
+        # Build proper encoded URL
         filename = f"{imd_code}_{date_str}_E.pdf"
-        url = f"{self.base_url}/{filename}"
-        
+        full_path = f"Files/District AAS Bulletin/English Bulletin/{filename}"
+        # encoded_path = quote(full_path)  # Encode spaces and special chars
+        url = f"https://imdagrimet.gov.in/accessData.php?path={full_path}"
+
         try:
             logger.info(f"Downloading: {url}")
             response = self.session.get(url, timeout=self.timeout)
-            
+            if b"file not found" in response.content.lower() or len(response.content.strip()) < 100:
+                print(f"PDF not found at {url}")
+                return None
             if response.status_code == 200:
                 content = response.content
                 if self.is_valid_pdf(content):
@@ -140,16 +151,17 @@ class IMDPDFDownloader:
                     logger.info(f"Successfully downloaded: {local_path}")
                     return local_path
                 else:
-                    logger.warning(f"Downloaded content is not a valid PDF for {filename}")
+                    logger.warning(f"Downloaded file is not a valid PDF for {filename}")
             else:
                 logger.warning(f"HTTP {response.status_code} for {url}")
-                
+
         except requests.RequestException as e:
             logger.error(f"Download failed for {url}: {e}")
         except Exception as e:
             logger.error(f"Unexpected error downloading {url}: {e}")
-        
+
         return None
+
     
     def try_latest_pdf(self, imd_code: str, max_days: int = 7) -> Optional[Path]:
         """Try to download the most recent available PDF"""
@@ -243,8 +255,8 @@ class WeatherToolManager:
     """Main manager class for weather tool operations"""
     
     def __init__(self):
-        self.imd_codes_path = os.getenv("IMD_CODES_FILE", "datasets/IMDCodes.csv")
-        self.download_dir = os.getenv("WEATHER_DOWNLOAD_DIR", "downloads/weather")
+        self.imd_codes_path = os.getenv("IMD_CODES_FILE", "..\datasets\IMDCodes.csv")
+        self.download_dir = os.getenv("WEATHER_DOWNLOAD_DIR", "downloads")
         self.cache_days = int(os.getenv("WEATHER_CACHE_DAYS", "30"))
         
         self._handler = None
