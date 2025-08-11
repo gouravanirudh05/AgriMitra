@@ -10,6 +10,7 @@ import json
 import asyncio
 import logging
 from typing import Dict, Any, Optional
+from subagents.youtube_agent_summary import YouTubeAgentLink, get_YouTubeAgentLink
 
 # Import the enhanced orchestrator
 from agent.orchestrator import get_orchestrator, AgentOrchestrator
@@ -40,6 +41,9 @@ async def startup_event():
         # Initialize orchestrator
         global orchestrator_instance
         orchestrator_instance = await get_orchestrator()
+
+        global youtube_agent_link
+        youtube_agent_link = get_YouTubeAgentLink()
         
         # Verify orchestrator health
         health = orchestrator_instance.health_check()
@@ -125,7 +129,11 @@ async def chat_with_ai(chat_data: ChatMessage):
                 )
             
             ai_response = result['response']
-            
+            yt_link = []
+            try:
+                yt_link.append(youtube_agent_link.get_youtube_video(enhanced_query, ai_response))
+            except Exception as e:
+                logger.error(f"Error getting YouTube video link: {e}")
         except HTTPException:
             raise
         except Exception as e:

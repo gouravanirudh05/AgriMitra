@@ -34,6 +34,7 @@ class ChatMessage(BaseModel):
     message: str
     youtube: Optional[str] = None
     sources: Optional[str] = None
+    image: Optional[str] = None
     language: str
     userId: str
     conversationId: Optional[str] = None
