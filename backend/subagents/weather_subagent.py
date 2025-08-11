@@ -13,7 +13,7 @@ class WeatherSubAgent:
     def __init__(self, config: Optional[Dict] = None, memory=None, callbacks=None):
         self.config = config or {}
         self.llm = ChatGoogleGenerativeAI(
-            model="gemini-2.0-flash-exp",
+            model="gemini-2.0-flash-lite",
             temperature=0.1,
             convert_system_message_to_human=True
         )

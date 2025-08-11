@@ -219,7 +219,7 @@ class IMDPDFProcessor:
             
             if not markdown_content.strip():
                 raise ValueError("Extracted content is empty")
-            
+            markdown_content = markdown_content[:3000]
             # Add metadata header
             file_info = f"# Weather Bulletin\n"
             file_info += f"**Source:** {self.pdf_path.name}\n"
