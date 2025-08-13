@@ -332,6 +332,7 @@ def get_weather(district: str) -> str:
         - get_weather("Mumbai") 
         - get_weather("New Delhi")
     """
+    print(district)
     if not district or not district.strip():
         return "Please provide a valid district name. Example: 'Bangalore Urban' or 'Mumbai'"
     

@@ -249,7 +249,7 @@ states_path = os.path.join(BASE_DIR, "../../datasets/agrimarket/states.json")
 states_path = os.path.normpath(states_path)
 states = load_data(states_path)
 
-@tool("get_market_price", return_direct=True)
+@tool("get_market_price")
 def get_market_price(state: str, commodity: str, start_date: str, end_date: str, district: str = None) -> str:
     """
     Fetches market price data for a given state, commodity, and date range from Agmarknet.

@@ -15,7 +15,6 @@ class YouTubeAgentLink:
         self.llm = ChatGoogleGenerativeAI(
             model="gemini-2.0-flash",
             temperature=0.1,
-            convert_system_message_to_human=True
         )
         self.tool = youtube_search_tool
         self.name = "YouTube Subagent"

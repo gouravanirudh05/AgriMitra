@@ -14,6 +14,25 @@ from langchain_core.tools import tool, InjectedToolCallId
 from langchain_core.messages import convert_to_messages, HumanMessage, AIMessage, ToolMessage
 
 # Try to import create_react_agent, fall back to custom implementation
+from langchain_google_genai import ChatGoogleGenerativeAI
+from langchain.agents import initialize_agent, AgentType
+from langchain.memory import ConversationBufferWindowMemory
+from langchain.callbacks import StdOutCallbackHandler
+
+# Import subagents (keep existing imports)
+from subagents.weather_subagent import WeatherSubAgent
+from subagents.rag_subagent import RAGSubAgent
+from subagents.youtube_subagent import YouTubeSubAgent
+from subagents.market_subagent import MarketSubAgent
+from subagents.fertilizer_subagent import FertilizerSubAgent
+from langgraph_supervisor.handoff import create_forward_message_tool
+# Import tools for backward compatibility
+from tools.rag_tool import rag_tool
+from tools.weather_tool import weather_tool, weather_districts_tool
+from tools.youtube_search_tool import youtube_search_tool
+from tools.agri_market import get_market_price, list_market_commodities, list_market_states
+from tools.fertilizer import get_recommendation
+
 try:
     from langgraph.prebuilt import create_react_agent, InjectedState
     from langgraph_supervisor import create_supervisor
@@ -25,24 +44,7 @@ except ImportError:
     except ImportError:
         LANGGRAPH_REACT_AVAILABLE = False
         InjectedState = None
-
-from langchain_google_genai import ChatGoogleGenerativeAI
-from langchain.agents import initialize_agent, AgentType
-from langchain.memory import ConversationBufferWindowMemory
-from langchain.callbacks import StdOutCallbackHandler
-
-# Import subagents (keep existing imports)
-from subagents.weather_subagent import WeatherSubAgent
-from subagents.rag_subagent import RAGSubAgent
-from subagents.youtube_subagent import YouTubeSubAgent
-from subagents.market_subagent import MarketSubAgent
-
-# Import tools for backward compatibility
-from tools.rag_tool import rag_tool
-from tools.weather_tool import weather_tool, weather_districts_tool
-from tools.youtube_search_tool import youtube_search_tool
-from tools.agri_market import get_market_price, list_market_commodities, list_market_states
-
+print("LANGRRRRRRRRRRRRRRRRRRRRRR: ",LANGGRAPH_REACT_AVAILABLE)
 dotenv.load_dotenv()
 
 # Set up logging
@@ -95,7 +97,7 @@ class LangGraphSupervisorOrchestrator:
         # Create necessary directories
         dirs_to_create = [
             Path(os.getenv('AGMARKNET_DATA_DIR', 'datasets')),
-            Path(os.getenv('WEATHER_DOWNLOAD_DIR', 'downloads/weather')),
+            Path(os.getenv('WEATHER_DOWNLOAD_DIR', 'downloads')),
             Path('downloads'),
             Path('logs'),
             Path('subagents')
@@ -112,7 +114,6 @@ class LangGraphSupervisorOrchestrator:
             self.llm = ChatGoogleGenerativeAI(
                 model=self.config['model'],
                 temperature=self.config['temperature'],
-                convert_system_message_to_human=True,
                 safety_settings={
                     7: 0,  # HARM_CATEGORY_HARASSMENT: BLOCK_NONE
                     8: 0,  # HARM_CATEGORY_HATE_SPEECH: BLOCK_NONE
@@ -125,7 +126,6 @@ class LangGraphSupervisorOrchestrator:
             self.routing_llm = ChatGoogleGenerativeAI(
                 model=self.config['model'],
                 temperature=0.2,  # Slightly higher for routing decisions
-                convert_system_message_to_human=True,
                 safety_settings={
                     7: 0, 8: 0, 9: 0, 10: 0
                 }
@@ -155,9 +155,10 @@ class LangGraphSupervisorOrchestrator:
         try:
             self.subagents = {
                 'weather': WeatherSubAgent(),
-                'knowledge': RAGSubAgent(),
-                'youtube': YouTubeSubAgent(),
-                'market': MarketSubAgent()
+                # 'knowledge': RAGSubAgent(),
+                # 'youtube': YouTubeSubAgent(),
+                'market': MarketSubAgent(),
+                'fertilizer': FertilizerSubAgent()
             }
             
             # Validate subagents
@@ -200,16 +201,17 @@ Instructions:
 4. For video/tutorial requests: Use youtube agent
 5. For weather/climate queries: Use weather agent  
 6. For market/price queries: Use market agent
-7. For general knowledge/information: Use knowledge agent
+7. For fertilizer recommendations: Use fertilizer agent
+8. For general knowledge/information: Use knowledge agent
 
-Response with ONLY the agent name (weather, youtube, market, or knowledge):"""
+Response with ONLY the agent name (weather, youtube, market, fertilizer, or knowledge):"""
 
             # Get routing decision from Gemini
             routing_message = HumanMessage(content=routing_prompt)
             response = await self.routing_llm.ainvoke([routing_message])
             
             # # Extract agent name from response
-            agent_choice = re.search(r'\b(weather|youtube|market|knowledge)\b', response.content.lower())
+            agent_choice = re.search(r'\b(weather|youtube|market|knowledge|fertilizer)\b', response.content.lower())
             agent_choice = agent_choice.group(1) if agent_choice else response.content.strip().lower()
             
             # Validate and clean the response
@@ -227,44 +229,13 @@ Response with ONLY the agent name (weather, youtube, market, or knowledge):"""
                     logger.info(f"🎯 Gemini routed (partial match) '{query[:50]}...' -> {agent}")
                     return agent
             
-            # Fallback to keyword-based routing if Gemini response is unclear
-            logger.warning(f"⚠️ Gemini routing unclear: '{agent_choice}', falling back to keyword matching")
-            return self._fallback_keyword_routing(query)
+            logger.warning(f"⚠️ Gemini routing unclear: '{agent_choice}', ending...")
+            return END
             
         except Exception as e:
             logger.error(f"Error in Gemini routing: {e}")
-            # Fallback to keyword-based routing
-            return self._fallback_keyword_routing(query)
+            return END
     
-    def _fallback_keyword_routing(self, query: str) -> str:
-        """Fallback keyword-based routing when Gemini routing fails"""
-        query_lower = query.lower()
-        
-        # Weather-related keywords (check early and prioritize)
-        if any(keyword in query_lower for keyword in [
-            'weather', 'temperature', 'rainfall', 'humidity', 'climate', 'forecast',
-            'rain', 'sunny', 'cloudy', 'storm', 'wind', 'district weather', 'imd'
-        ]):
-            return 'weather' if 'weather' in self.subagents else 'knowledge'
-        
-        # Video/tutorial requests
-        elif any(keyword in query_lower for keyword in [
-            'video', 'youtube', 'tutorial', 'show me', 'watch', 'demonstration',
-            'learning video', 'educational video', 'farming video', 'tips video'
-        ]):
-            return 'youtube' if 'youtube' in self.subagents else 'knowledge'
-        
-        # Market-related keywords
-        elif any(keyword in query_lower for keyword in [
-            'price', 'market', 'commodity', 'cost', 'rate', 'trading', 'agmarknet',
-            'mandi', 'wholesale', 'retail', 'crop price', 'agricultural price'
-        ]):
-            return 'market' if 'market' in self.subagents else 'knowledge'
-        
-        # Default to knowledge base
-        else:
-            return 'knowledge'
-
     def _create_custom_supervisor_node(self):
         """Create a custom supervisor node when create_react_agent is not available"""
         async def supervisor_node_func(state: MessagesState):
@@ -309,6 +280,12 @@ Response with ONLY the agent name (weather, youtube, market, or knowledge):"""
                 
                 # Route to appropriate subagent using Gemini
                 subagent_name = await self._classify_query_with_gemini(user_message)
+                if subagent_name == END:
+                    return {
+                        'success': False,
+                        'response': "I encountered an issue processing your query with the supervisor.",
+                        'error': "No final state received from supervisor"
+                    }
                 
                 logger.info(f"📋 Supervisor routing to: {subagent_name}")
                 
@@ -353,70 +330,6 @@ Response with ONLY the agent name (weather, youtube, market, or knowledge):"""
             return f"Find relevant educational videos for: {query}. Provide video recommendations with descriptions."
         else:  # knowledge
             return f"Provide comprehensive information about: {query}. Search knowledge base and provide detailed, accurate information."
-    
-    def _create_subagent_handoff_tools(self):
-        """Create handoff tools for each subagent (only used with create_react_agent)"""
-        if not LANGGRAPH_REACT_AVAILABLE:
-            return []
-            
-        handoff_tools = []
-        
-        def create_handoff_tool(agent_name: str, description: str):
-            name = f"transfer_to_{agent_name}"
-            
-            @tool(name, description=description)
-            def handoff_tool(
-                task_description: Annotated[
-                    str,
-                    "Clear description of what the agent should do, including all relevant context.",
-                ],
-                state: Annotated[MessagesState, InjectedState] if InjectedState else MessagesState,
-                tool_call_id: Annotated[str, InjectedToolCallId],
-            ) -> Command:
-                # Create tool message for the supervisor
-                tool_message = ToolMessage(
-                    content=f"Successfully transferred to {agent_name}",
-                    name=name,
-                    tool_call_id=tool_call_id,
-                )
-                
-                # Create task message for the subagent
-                task_message = HumanMessage(content=task_description)
-                agent_input = {"messages": [task_message]}
-                
-                return Command(
-                    goto=[Send(f"{agent_name}_agent", agent_input)],
-                    update={"messages": state.get("messages", []) + [tool_message]}
-                )
-            
-            return handoff_tool
-        
-        # Create handoff tools for each subagent
-        if 'weather' in self.subagents:
-            handoff_tools.append(create_handoff_tool(
-                'weather',
-                'Assign weather-related tasks to the weather agent. Use for weather forecasts, climate data, temperature, rainfall, and meteorological information.'
-            ))
-        
-        if 'knowledge' in self.subagents:
-            handoff_tools.append(create_handoff_tool(
-                'knowledge', 
-                'Assign knowledge and research tasks to the knowledge agent. Use for general information, policies, schemes, agricultural knowledge, and document searches.'
-            ))
-        
-        if 'youtube' in self.subagents:
-            handoff_tools.append(create_handoff_tool(
-                'youtube',
-                'Assign video search tasks to the youtube agent. Use when user asks for videos, tutorials, or educational content.'
-            ))
-        
-        if 'market' in self.subagents:
-            handoff_tools.append(create_handoff_tool(
-                'market',
-                'Assign market price and commodity tasks to the market agent. Use for agricultural prices, market rates, and commodity information.'
-            ))
-        
-        return handoff_tools
     
     def _create_subagent_node(self, subagent_name: str, subagent):
         """Create a LangGraph node for a subagent"""
@@ -474,98 +387,26 @@ Response with ONLY the agent name (weather, youtube, market, or knowledge):"""
             # First, add the supervisor node
             if LANGGRAPH_REACT_AVAILABLE:
                 logger.info("Using create_react_agent for supervisor")
-
-                # Create handoff tools
-                # handoff_tools = self._create_subagent_handoff_tools()
-                
+                agent_objs = [sa.agent_executor for sa in self.subagents.values()]
                 # Create supervisor agent
-                supervisor_agent = create_react_agent(
+                forwarding_tool = create_forward_message_tool("supervisor")
+                supervisor_agent = create_supervisor(
                     model=self.routing_llm,  # Use routing LLM for supervisor
-                    # tools=handoff_tools,
+                    agents=agent_objs,
                     prompt=self._get_supervisor_system_message(),
-                    name="supervisor"
+                    tools=[forwarding_tool],
+                    name="supervisor",
+                    output_mode = "full_history",
+                    add_handoff_back_messages=False,
                 )
+                try:
+                    supervisor_agent = supervisor_agent.compile()
+                except Exception as e:
+                    print("Error compiling supervisor agent:", e)
                 
-                # Add supervisor node
-                available_agents = [f"{name}_agent" for name in self.subagents.keys()]
-                graph_builder.add_node(
-                    supervisor_agent, 
-                    destinations=available_agents + [END]
-                )
-                
-                # Add entry edge
-                graph_builder.add_edge(START, "supervisor")
-                
-                # Add subagent nodes and return edges
-                for name, subagent in self.subagents.items():
-                    agent_name = f"{name}_agent"
-                    subagent_node = self._create_subagent_node(name, subagent)
-                    graph_builder.add_node(subagent_node, name=agent_name)
-                    graph_builder.add_edge(agent_name, "supervisor")
-                    logger.info(f"Added subagent node and edge: {agent_name}")
-                
-            else:
-                logger.info("Using custom supervisor node implementation")
-                # Create custom supervisor node
-                supervisor_node = self._create_custom_supervisor_node()
-                graph_builder.add_node("supervisor", supervisor_node)
-                logger.info("Added supervisor node")
-                
-                # Add all subagent nodes FIRST - store the names for later reference
-                subagent_node_names = []
-                for name, subagent in self.subagents.items():
-                    agent_name = f"{name}_agent"
-                    subagent_node = self._create_subagent_node(name, subagent)
-                    graph_builder.add_node(agent_name, subagent_node)
-                    subagent_node_names.append(agent_name)
-                    logger.info(f"Added subagent node: {agent_name}")
-                
-                # Add the START edge
-                graph_builder.add_edge(START, "supervisor")
-                logger.info("Added edge: START -> supervisor")
-                
-                # Create a routing function for conditional edges
-                async def route_to_agent(state: MessagesState):
-                    """Route to the appropriate agent based on supervisor decision"""
-                    # Check if supervisor set a next_agent
-                    if "next_agent" in state:
-                        next_agent = state["next_agent"]
-                        logger.info(f"Routing to: {next_agent}")
-                        return next_agent
-                    
-                    # Fallback: use Gemini to analyze the last message
-                    messages = state.get("messages", [])
-                    if messages:
-                        # Find the actual user query
-                        user_query = None
-                        for msg in reversed(messages):
-                            if isinstance(msg, HumanMessage) and "Context from recent conversation" not in str(msg.content):
-                                user_query = msg.content
-                                break
-                        
-                        if user_query:
-                            # Use Gemini routing as fallback
-                            agent_name = await self._classify_query_with_gemini(user_query)
-                            return f"{agent_name}_agent" if f"{agent_name}_agent" in subagent_node_names else subagent_node_names[0]
-                    
-                    return subagent_node_names[0] if subagent_node_names else END  # Default fallback
-                
-                # Add conditional edges from supervisor to subagents
-                graph_builder.add_conditional_edges(
-                    "supervisor",
-                    route_to_agent,
-                    subagent_node_names + [END]
-                )
-                logger.info(f"Added conditional edges from supervisor to: {subagent_node_names}")
-                
-                # Add edges from each subagent back to END (instead of supervisor to avoid loops)
-                for agent_name in subagent_node_names:
-                    graph_builder.add_edge(agent_name, END)
-                    logger.info(f"Added edge: {agent_name} -> END")
-            
             # Try to compile the graph
-            logger.info("Attempting to compile the graph...")
-            self.supervisor_graph = graph_builder.compile()
+            # logger.info("Attempting to compile the graph...")
+            self.supervisor_graph = supervisor_agent
             
             logger.info("🎯 LangGraph supervisor created successfully")
             logger.info(f"📊 Available agents: {list(self.subagents.keys())}")
@@ -607,8 +448,8 @@ You are an intelligent supervisor managing specialized agents for agricultural a
 
 **Instructions:**
 1. **Analyze each query intelligently** to determine which agent can best handle it
-2. **Assign work to ONE agent at a time** - do not call agents in parallel
-3. **Provide clear, detailed task descriptions** when transferring to agents
+2. You may assign work to **one or more agents** in parallel if the query spans multiple domains.
+3. **Provide clear, detailed task descriptions** to each agent you call.
 4. **Do not do any work yourself** - always delegate to the appropriate specialist agent
 5. **Be smart about routing**: 
    - Video/tutorial requests -> YouTube agent
@@ -616,15 +457,29 @@ You are an intelligent supervisor managing specialized agents for agricultural a
    - Market/price queries -> Market agent
    - General information -> Knowledge agent
 6. **Context matters**: Consider the user's intent, not just keywords
-7. **Be flexible**: If a query could fit multiple agents, choose the most specific one
-
+7. **Be efficient**: if multiple agents are called, ensure their outputs together will fully answer the query.
+8. **When to use multiple agents**:
+   - If the query contains distinct sub-requests that fall under different agents.
+   - If answering the query fully requires combining data from different domains.
 **Task Description Guidelines:**
 - Include all relevant context from the user's query
 - Specify what information is needed
 - Mention any specific requirements or constraints
 - Be clear about the expected output format
 
-Choose the most appropriate agent based on intelligent analysis of the query content and delegate the task with a comprehensive description."""
+**Handoff Rule (must follow):**
+When sending a query to an agent:
+1. Rewrite the user’s request into a **clear, agent-specific instruction**.
+2. Remove unrelated details that are outside that agent’s domain.
+3. Include:
+   - The exact commodity/location/timeframe for Market Agent
+   - The exact date/location/weather parameter for Weather Agent
+   - The exact topic/title for YouTube Agent
+   - The exact knowledge scope for Knowledge Agent
+4. Never pass a query containing instructions unrelated to the chosen agent’s domain.
+
+Once all necessary agent responses are collected, combine them into a single, concise, and informative final answer for the user.
+"""
     
     def _initialize_tools(self):
         """Initialize tools for backward compatibility"""
@@ -651,61 +506,7 @@ Choose the most appropriate agent based on intelligent analysis of the query con
         
         self.tools = valid_tools
         logger.info(f"Initialized {len(self.tools)} tools: {[t.name for t in self.tools]}")
-    
-    def _initialize_agent(self):
-        """Initialize traditional agent for backward compatibility"""
-        try:
-            callbacks = [StdOutCallbackHandler()] if self.config['verbose'] else []
-            
-            agent_kwargs = {
-                'system_message': self._get_traditional_system_message()
-            }
-            
-            self.agent_executor = initialize_agent(
-                tools=self.tools,
-                llm=self.llm,
-                agent=AgentType.STRUCTURED_CHAT_ZERO_SHOT_REACT_DESCRIPTION,
-                verbose=self.config['verbose'],
-                memory=self.memory,
-                agent_kwargs=agent_kwargs,
-                callbacks=callbacks,
-                max_iterations=self.config['max_iterations'],
-                max_execution_time=self.config['max_execution_time'],
-                handle_parsing_errors=True,
-                return_intermediate_steps=False
-            )
-            
-            logger.info("🤖 Traditional agent executor initialized successfully")
-            
-        except Exception as e:
-            logger.error(f"Failed to initialize agent: {e}")
-            raise RuntimeError(f"Agent initialization failed: {e}")
-    
-    def _get_traditional_system_message(self) -> str:
-        """Get system message for traditional agent"""
-        today = date.today()
-        today_str = today.strftime("%d-%m-%Y")
-        
-        return f"""Today's date is {today_str}.
-You are a helpful AI assistant with access to multiple specialized tools for providing information about weather, agricultural market prices, and knowledge base queries.
-
-**Available Tools:**
-- **Knowledge Search (RAG)**: Search documentation, policies, and knowledge bases
-- **Weather Information**: Get current weather and forecasts for Indian districts (IMD data)
-- **Market Prices**: Get agricultural commodity prices from AgMarkNet for Indian markets
-- **YouTube Search**: Find educational and agricultural videos
-
-**Guidelines:**
-1. **Always use appropriate tools** for specific queries rather than relying on general knowledge
-2. **Be specific and accurate** in your responses
-3. **Format responses clearly** using markdown when helpful
-4. **Handle errors gracefully** and provide helpful suggestions
-5. **For weather queries**: Use district names (e.g., "Bangalore Urban", "Mumbai")
-6. **For market queries**: Use commodity and state names (e.g., "wheat prices in Karnataka")
-7. **Provide context** about data sources and limitations when relevant
-
-You should be helpful, accurate, and informative while being concise and well-structured in your responses."""
-    
+      
     async def initialize(self):
         """Initialize the complete orchestrator"""
         if self.is_initialized:
@@ -741,21 +542,17 @@ You should be helpful, accurate, and informative while being concise and well-st
             
             # Step 6: Initialize traditional agent if needed
             if not self.use_langgraph_supervisor:
-                logger.info("6/6 Initializing traditional agent...")
-                self._initialize_agent()
+                logger.error("Langgraph not available, terminating")
+                raise RuntimeError("Langgraph not available, terminating")
+                # logger.info("6/6 Initializing traditional agent...")
             else:
                 logger.info("6/6 Skipping traditional agent (using LangGraph supervisor)")
-            
-            self.is_initialized = True
-            
-            if self.use_langgraph_supervisor:
                 logger.info("✅ LangGraph supervisor orchestrator initialization completed!")
                 logger.info(f"📊 Active subagents: {list(self.subagents.keys())}")
                 logger.info("🧠 Using Gemini-powered intelligent routing")
-            else:
-                logger.info("✅ Traditional orchestrator initialization completed!")
-                logger.info(f"📊 Active tools: {[t.name for t in self.tools]}")
             
+            self.is_initialized = True
+
             # Set global variables for backward compatibility
             global agent_executor, agent_memory
             agent_executor = self.agent_executor
@@ -769,145 +566,39 @@ You should be helpful, accurate, and informative while being concise and well-st
         """Execute a query using LangGraph supervisor or traditional agent"""
         if not self.is_initialized:
             raise RuntimeError("Orchestrator not initialized. Call initialize() first.")
-        
-        try:
-            logger.info(f"🔍 Processing query: {message[:100]}...")
-            
-            if self.use_langgraph_supervisor and self.supervisor_graph:
-                # Use LangGraph supervisor with Gemini routing
-                logger.info("🧠 Using LangGraph supervisor with Gemini routing")
-                
-                # Create initial state
-                initial_state = {
-                    "messages": [HumanMessage(content=message)]
-                }
-                
-                # Stream through the graph
-                final_state = None
-                agent_used = None
-                supervisor_messages = []
-                
-                try:
-                    async for chunk in self.supervisor_graph.astream(initial_state):
-                        final_state = chunk
-                        logger.info(f"Graph chunk: {list(chunk.keys())}")
-                        
-                        # Track which agent was used and collect supervisor messages
-                        for node_name, node_state in chunk.items():
-                            if node_name.endswith('_agent') and node_name != 'supervisor':
-                                agent_used = node_name.replace('_agent', '')
-                                logger.info(f"Agent {agent_used} executed with state keys: {list(node_state.keys())}")
-                                
-                                # Log the actual response from the agent
-                                if 'messages' in node_state:
-                                    for msg in node_state['messages']:
-                                        content = getattr(msg, 'content', str(msg))
-                                        logger.info(f"Agent {agent_used} response content length: {len(content)}")
-                                        logger.info(f"Agent {agent_used} response preview: {content[:200]}...")
-                                        
-                            elif node_name == 'supervisor':
-                                if 'messages' in node_state:
-                                    supervisor_messages = node_state['messages']
-                                    logger.info(f"Supervisor messages count: {len(supervisor_messages)}")
-                
-                except Exception as stream_error:
-                    logger.error(f"Error during graph streaming: {stream_error}")
-                    return {
-                        'success': False,
-                        'response': f"I encountered an error processing your request: {stream_error}",
-                        'error': str(stream_error)
-                    }
-                
-                if final_state:
-                    # Try to get response from different possible locations
-                    response = None
-                    
-                    # First, look for the actual subagent response (not supervisor routing messages)
-                    if final_state:
-                        # Look for the subagent that was used
-                        subagent_response = None
-                        
-                        # Check each node in the final state
-                        for node_name, node_state in final_state.items():
-                            # Skip supervisor node, look for actual subagent responses
-                            if node_name.endswith('_agent') and node_name != 'supervisor':
-                                if 'messages' in node_state and node_state['messages']:
-                                    for msg in node_state['messages']:
-                                        if hasattr(msg, 'content') and msg.content.strip():
-                                            content = msg.content.strip()
-                                            # Make sure it's not just echoing the query or an error
-                                            if (content != message and len(content) > len(message) 
-                                                and not content.startswith("I encountered an error")):
-                                                subagent_response = content
-                                                break
-                                        elif isinstance(msg, dict) and msg.get('content'):
-                                            content = msg['content'].strip()
-                                            if (content != message and len(content) > len(message)
-                                                and not content.startswith("I encountered an error")):
-                                                subagent_response = content
-                                                break
-                                
-                                if subagent_response:
-                                    response = subagent_response
-                                    break
-                    
-                    # If still no good response, check for error messages that we can handle gracefully
-                    if not response and final_state:
-                        for node_name, node_state in final_state.items():
-                            if node_name.endswith('_agent'):
-                                if 'messages' in node_state and node_state['messages']:
-                                    for msg in node_state['messages']:
-                                        content = getattr(msg, 'content', str(msg))
-                                        if content and content.strip():
-                                            response = content.strip()
-                                            break
-                                if response:
-                                    break
-                    
-                    # Final fallback response
-                    if not response or response == message:
-                        logger.warning("No proper response found, using fallback")
-                        response = "I processed your request but encountered an issue generating a proper response. Please try rephrasing your question or being more specific about what you need."
-                    
-                    logger.info(f"✅ LangGraph supervisor completed successfully")
-                    return {
-                        'success': True,
-                        'response': response,
-                        'subagent_used': agent_used,
-                        'architecture': 'langgraph_supervisor_gemini',
-                        'error': None
-                    }
-                
-                # Fallback response
-                return {
-                    'success': False,
-                    'response': "I encountered an issue processing your query with the supervisor.",
-                    'error': "No final state received from supervisor"
-                }
-            
-            elif not self.use_langgraph_supervisor and self.agent_executor:
-                # Use traditional agent
-                logger.info("🤖 Using traditional agent")
-                result = self.agent_executor.run(input=message)
-                logger.info("✅ Traditional agent completed successfully")
-                
+        if self.use_langgraph_supervisor and self.supervisor_graph:
+            try:
+                logger.info(f"🔍 Processing query: {message[:100]}...")
+                result = self.supervisor_graph.invoke({
+                    "messages": [
+                        HumanMessage(content=message)
+                    ]
+                })
+                logger.info(f"✅ LangGraph supervisor completed successfully")
+                for m in result["messages"]:
+                    m.pretty_print()
+                assistant_messages = [m for m in result["messages"] if getattr(m, "content", None)]
+                if assistant_messages:
+                    final_message = assistant_messages[-1].content
+                else:
+                    final_message = None
+
                 return {
                     'success': True,
-                    'response': result,
-                    'architecture': 'traditional',
+                    'response': final_message,
+                    'subagent_used': None,
+                    'architecture': 'langgraph_supervisor',
                     'error': None
                 }
-            
-            else:
-                raise RuntimeError("No valid execution method available")
-            
-        except Exception as e:
-            logger.error(f"❌ Query processing failed: {e}")
-            return {
-                'success': False,
-                'response': f"I encountered an error processing your query: {e}",
-                'error': str(e)
-            }
+            except Exception as e:
+                logger.error(f"❌ Query processing failed: {e}")
+                return {
+                    'success': False,
+                    'response': f"I encountered an error processing your query: {e}",
+                    'error': str(e)
+                }
+        else:
+            raise RuntimeError("No valid execution method available")
     
     def get_tool_info(self) -> Dict[str, Any]:
         """Get information about the orchestrator"""
