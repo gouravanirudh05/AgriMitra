@@ -125,7 +125,7 @@ class LangGraphSupervisorOrchestrator:
             # Routing LLM with higher temperature for better reasoning
             self.routing_llm = ChatGoogleGenerativeAI(
                 model=self.config['model'],
-                temperature=0.2,  # Slightly higher for routing decisions
+                temperature=0.1,  # Slightly higher for routing decisions
                 safety_settings={
                     7: 0, 8: 0, 9: 0, 10: 0
                 }
@@ -396,8 +396,10 @@ Response with ONLY the agent name (weather, youtube, market, fertilizer, or know
                     prompt=self._get_supervisor_system_message(),
                     tools=[forwarding_tool],
                     name="supervisor",
-                    output_mode = "full_history",
+                    output_mode = "last_message",
                     add_handoff_back_messages=False,
+                    # add_handoff_messages=False,
+                    handoff_tool_prefix="consult_with"
                 )
                 try:
                     supervisor_agent = supervisor_agent.compile()
@@ -436,6 +438,8 @@ Response with ONLY the agent name (weather, youtube, market, fertilizer, or know
                 available_agents.append("- **YouTube Agent**: For video searches, tutorials, and educational content")
             elif name == 'market':
                 available_agents.append("- **Market Agent**: For agricultural prices, market rates, and commodity information")
+            elif name == 'fertilizer':
+                available_agents.append("- **Fertilizer Agent**: For fertilizer recommendations and information")
         
         agents_list = "\n".join(available_agents)
         
@@ -448,7 +452,7 @@ You are an intelligent supervisor managing specialized agents for agricultural a
 
 **Instructions:**
 1. **Analyze each query intelligently** to determine which agent can best handle it
-2. You may assign work to **one or more agents** in parallel if the query spans multiple domains.
+2. You may assign work to **one or more agents** one after the other if the query spans multiple domains.
 3. **Provide clear, detailed task descriptions** to each agent you call.
 4. **Do not do any work yourself** - always delegate to the appropriate specialist agent
 5. **Be smart about routing**: 
@@ -478,7 +482,13 @@ When sending a query to an agent:
    - The exact knowledge scope for Knowledge Agent
 4. Never pass a query containing instructions unrelated to the chosen agent’s domain.
 
-Once all necessary agent responses are collected, combine them into a single, concise, and informative final answer for the user.
+Routing Process (always follow):
+1. Break the user query into separate sub-requests.
+2. For each sub-request, identify domain keywords.
+3. Send each sub-request only to its correct agent.
+4. After getting sub-request from one of the agents, see what details you need, and send another sub-request to the another agent. Or if more context is needed from the user, ask them to provide more details.
+5. MAKE SURE YOU HAVE CALLED ALL AGENTS AND HAVE RECEIVED ALL RESPONSES BEFORE COMBINING THEM. IF NOT CALL THEM AGAIN.
+Once all necessary agent responses are collected, combine them into a single, concise, and informative final answer for the user answering all of their queries.
 """
     
     def _initialize_tools(self):

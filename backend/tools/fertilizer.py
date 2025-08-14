@@ -230,7 +230,7 @@ def get_recommendation(district_name, crop_name, npk_oc):
         str: Markdown table of recommendations.
         or None if not found.
     """
-    cache_file = "../../datasets/fertilizer/cache.json"
+    cache_file = "../datasets/fertilizer/cache.json"
     with open(cache_file, 'r', encoding='utf-8') as f:
         data = json.load(f)
 
