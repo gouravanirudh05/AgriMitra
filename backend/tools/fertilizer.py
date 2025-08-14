@@ -2,7 +2,7 @@ import requests
 import json
 import time
 from langchain.tools import tool
-API_URL = "https://example.com/"  # change to actual endpoint
+API_URL = "https://soilhealth4.dac.gov.in//"  # change to actual endpoint
 
 HEADERS = {
     "Content-Type": "application/json"
@@ -91,13 +91,69 @@ def get_all_crops_id(state_id):
         "state": state_id
     })
 
-def get_recommendation(crops, state_id, district_id, results):
+def get_recommendation_online(crops, state_id, district_id, results):
     return gql_request("GetRecommendations", GET_RECOMMENDATIONS, {
         "crops": crops,
         "state": state_id,
         "district": district_id,
         "results": results
     })
+def dict_to_markdown(data: dict) -> str:
+    md_lines = []
+
+    # Assuming data is like: {'getRecommendations': [...]}
+    for rec in data.get('getRecommendations', []):
+        crop = rec.get('crop', 'Unknown Crop')
+        md_lines.append(f"## Crop Recommendation\n")
+        md_lines.append(f"### Crop\n**{crop}**\n")
+
+        # Fertilizers Data
+        fert_data = rec.get('fertilizersdata', [])
+        if fert_data:
+            md_lines.append("### Fertilizers Data")
+            md_lines.append("| Name | Value | Unit |")
+            md_lines.append("|------|-------|------|")
+            for fert in fert_data:
+                md_lines.append(f"| {fert['name']} | {fert['values']} | {fert['unit']} |")
+            md_lines.append("")
+
+        # Fertilizers Data Combination Two
+        fert_comb2 = rec.get('fertilizzersdatacombTwo', [])
+        if fert_comb2:
+            md_lines.append("### Fertilizers Data (Combination Two)")
+            md_lines.append("| Name | Value | Unit |")
+            md_lines.append("|------|-------|------|")
+            for fert in fert_comb2:
+                md_lines.append(f"| {fert['name']} | {fert['values']} | {fert['unit']} |")
+            md_lines.append("")
+
+        # FYM
+        fym = rec.get('fym')
+        if fym:
+            md_lines.append("### FYM (Farmyard Manure)")
+            md_lines.append("| Value | Unit |")
+            md_lines.append("|-------|------|")
+            md_lines.append(f"| {fym['value']} | {fym['unit']} |")
+            md_lines.append("")
+
+    return "\n".join(md_lines)
+
+
+# Example usage:
+# data = {
+#     'getRecommendations': [{
+#         'crop': 'ಬಾಳೆ (All Variety / Rainfed / Rabi)',
+#         'fertilizersdata': [
+#             {'name': '15-15-15', 'values': 2905, 'unit': 'Kg per Hectare'}
+#         ],
+#         'fertilizzersdatacombTwo': [
+#             {'name': '10-26-26', 'values': 1675.9615384615383, 'unit': 'Kg per Hectare'}
+#         ],
+#         'fym': {'value': 13.6, 'unit': 'Tonne per Hectare'}
+#     }]
+# }
+
+# print(dict_to_markdown(data))
 
 # -------------------------------
 # Cache Builder
@@ -171,18 +227,10 @@ def get_recommendation(district_name, crop_name, npk_oc):
         npk_oc (dict): Dictionary with keys 'n', 'p', 'k', 'OC'.
     
     Returns:
-        dict: {
-            "cropid": [...],
-            "stateid": "...",
-            "districtid": "...",
-            "n": "...",
-            "p": "...",
-            "k": "...",
-            "OC": "..."
-        }
+        str: Markdown table of recommendations.
         or None if not found.
     """
-    cache_file = "datasets/fertilizer/cache.json"
+    cache_file = "../../datasets/fertilizer/cache.json"
     with open(cache_file, 'r', encoding='utf-8') as f:
         data = json.load(f)
 
@@ -195,7 +243,7 @@ def get_recommendation(district_name, crop_name, npk_oc):
             return None
         match_name, score, idx = process.extractOne(
             name,
-            [item["name"].lower() for item in items],
+            [item["name"] for item in items],
             scorer=fuzz.token_sort_ratio
         )
         return items[idx] if score > 60 else None  # score threshold to avoid bad matches
@@ -203,22 +251,20 @@ def get_recommendation(district_name, crop_name, npk_oc):
     # Search for matching district → get state
     for state in states:
         district_match = best_match(district_name, state.get("districts", []))
+        print(district_match)
         if district_match:
             state_id = state["id"]
             district_id = district_match["id"]
 
             # Now find matching crop in that state
             crop_match = best_match(crop_name, state.get("crops", []))
+            print(crop_match,state_id,district_id)
             if crop_match:
                 crop_id = [crop_match["id"]]
-                return {
-                    "cropid": crop_id,
-                    "stateid": state_id,
-                    "districtid": district_id,
-                    **npk_oc
-                }
+                print(crop_id, state_id, district_id, npk_oc)
+                return dict_to_markdown(get_recommendation_online(crop_id, state_id, district_id, npk_oc))
 
-    return None
+    return "Error in fetching recommendation"
 
 # # Example usage:
 # npk_oc_values = {"n": "4", "p": "3", "k": "2", "OC": "4"}
@@ -243,5 +289,7 @@ if __name__ == "__main__":
     SCHEME = "XXX"
     CYCLE = "2025-26"
     # build_cache(SCHEME, CYCLE)
-    response = get_recommendation(["67178c3b70b4612eb9f4ee42"],"63f99fbd519359b7438a84ca","63f9b4b2519359b7438c290c",{"n": "4", "p": "3", "k": "2", "OC": "4"})
+    response = get_recommendation.invoke(input={"district_name": 'NORTH AND MIDDLE ANDAMAN', "crop_name": "Arecanut (All Variety)", "npk_oc":{'n': 1.0, 'k': 3.0, 'p': 2.0, 'OC': 4.0}})
+    # response = get_recommendation("","", )
+    # response = get_recommendation_online(["67178c3b70b4612eb9f4ee42"],"63f99fbd519359b7438a84ca","63f9b4b2519359b7438c290c",{"n": "4", "p": "3", "k": "2", "OC": "4"})
     print(response)
