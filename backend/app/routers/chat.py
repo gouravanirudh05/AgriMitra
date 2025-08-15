@@ -83,7 +83,8 @@ async def chat_with_ai(chat_data: ChatMessage):
                 status_code=status.HTTP_404_NOT_FOUND,
                 detail="User not found"
             )
-
+        USER_CONTEXT = {"state": user['state'] or "", "district": user['district'] or "", "name": user['name'] or ""}
+        print(USER_CONTEXT)
         # Get orchestrator (NEW)
         try:
             orchestrator = await get_orchestrator_instance()
@@ -126,7 +127,8 @@ async def chat_with_ai(chat_data: ChatMessage):
             result = await orchestrator.query(
                 enhanced_query,
                 conversation_id=conversation_id,
-                user_id=chat_data.userId
+                user_id=chat_data.userId,
+                user_context=USER_CONTEXT
             )
             
             processing_time = (datetime.utcnow() - start_time).total_seconds()

@@ -35,6 +35,7 @@ class WeatherSubAgent:
             "use the weather tool with the correct district parameter. "
             "If the query asks for a list of districts, use the weather_districts tool. "
             "Provide a clear, concise, and helpful answer."
+            "If the date is not provided, use the current date."
         ))
 
         # Create the ReAct agent

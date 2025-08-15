@@ -11,7 +11,7 @@ import re
 from langgraph.graph import StateGraph, START, MessagesState, END
 from langgraph.types import Command, Send
 from langchain_core.tools import tool, InjectedToolCallId
-from langchain_core.messages import convert_to_messages, HumanMessage, AIMessage, ToolMessage
+from langchain_core.messages import convert_to_messages, HumanMessage, AIMessage, ToolMessage, SystemMessage
 
 # Try to import create_react_agent, fall back to custom implementation
 from langchain_google_genai import ChatGoogleGenerativeAI
@@ -574,6 +574,7 @@ Once all necessary agent responses are collected, combine them into a single, co
     
     async def query(self, message: str, **kwargs) -> Dict[str, Any]:
         """Execute a query using LangGraph supervisor or traditional agent"""
+        user_context = kwargs.get("user_context", {})
         if not self.is_initialized:
             raise RuntimeError("Orchestrator not initialized. Call initialize() first.")
         if self.use_langgraph_supervisor and self.supervisor_graph:
@@ -581,6 +582,7 @@ Once all necessary agent responses are collected, combine them into a single, co
                 logger.info(f"🔍 Processing query: {message[:100]}...")
                 result = self.supervisor_graph.invoke({
                     "messages": [
+                        HumanMessage(content=f"User Context: User lives in state of {user_context['state']} and district of {user_context['district']}. His name is {user_context['name']}. Today's date is {date.today().strftime('%d-%m-%Y')}."),
                         HumanMessage(content=message)
                     ]
                 })
