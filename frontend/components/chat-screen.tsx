@@ -48,6 +48,7 @@ interface Message {
   youtube?: string[]
   sources?: string
   image?: string
+  language?: string
 }
 
 interface Conversation {
@@ -475,6 +476,7 @@ export default function ChatScreen() {
       isUser: true,
       timestamp: new Date(),
       image: selectedImage || undefined,
+      language: language
     }
 
     let conversation = currentConversation

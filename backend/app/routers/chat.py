@@ -11,6 +11,9 @@ import asyncio
 import logging
 from typing import Dict, Any, Optional
 from subagents.youtube_agent_summary import YouTubeAgentLink, get_YouTubeAgentLink
+from googletrans import Translator
+
+translator = Translator()
 
 # Import the enhanced orchestrator
 from agent.orchestrator import get_orchestrator, AgentOrchestrator
@@ -104,12 +107,19 @@ async def chat_with_ai(chat_data: ChatMessage):
                     role = "User" if msg["isUser"] else "Assistant"
                     context_parts.append(f"{role}: {msg['text']}")
                 recent_context = "\n".join(context_parts)
+                
+        lang_code = (await translator.detect(chat_data.message)).lang or "en"
 
+        if lang_code != "en":
+            translated_input = (await translator.translate(chat_data.message, src=lang_code, dest="en")).text
+        else:
+            translated_input = chat_data.message
+        
         # Prepare enhanced query with context
-        enhanced_query = chat_data.message
+        enhanced_query = translated_input
         if recent_context:
-            enhanced_query = f"Context from recent conversation:\n{recent_context}\n\nCurrent question: {chat_data.message}"
-
+            enhanced_query = f"Context from recent conversation:\n{recent_context}\n\nCurrent question: {translated_input}"
+        
         # Get response from Orchestrator (CHANGED FROM AIService)
         start_time = datetime.utcnow()
         try:
@@ -129,6 +139,10 @@ async def chat_with_ai(chat_data: ChatMessage):
                 )
             
             ai_response = result['response']
+            if lang_code != "en":
+                final_response = (await translator.translate(ai_response, src="en", dest=lang_code)).text
+            else:
+                final_response = ai_response
             yt_link = []
             try:
                 yt_link.append(youtube_agent_link.get_youtube_video(enhanced_query, ai_response))
@@ -154,12 +168,14 @@ async def chat_with_ai(chat_data: ChatMessage):
 
         ai_msg = {
             "id": str(uuid.uuid4()),
-            "text": ai_response,
+            "text": final_response,
             "isUser": False,
             "timestamp": datetime.utcnow(),
             "metadata": {
                 "processing_time": processing_time,
-                "tools_used": result.get('tools_used', [])
+                "tools_used": result.get('tools_used', []),
+                "lang_code": lang_code,
+                "actual_response": ai_response
             }
         }
 
@@ -180,7 +196,7 @@ async def chat_with_ai(chat_data: ChatMessage):
             }
             await db.conversations.insert_one(conv_doc)
 
-        return ChatResponse(response=ai_response, conversationId=conversation_id)
+        return ChatResponse(response=final_response, conversationId=conversation_id)
 
     except HTTPException:
         raise
