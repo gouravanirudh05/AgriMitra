@@ -5,7 +5,7 @@ from langchain_google_genai import ChatGoogleGenerativeAI
 from langchain_core.messages import SystemMessage
 from langgraph.prebuilt import create_react_agent
 from tools.agri_market import get_market_price, list_market_commodities, list_market_states
-
+from datetime import date
 logger = logging.getLogger(__name__)
 
 class MarketSubAgent:
@@ -16,7 +16,7 @@ class MarketSubAgent:
 
         # Initialize LLM
         self.llm = ChatGoogleGenerativeAI(
-            model="gemini-2.0-flash-exp",
+            model="gemini-2.0-flash",
             temperature=0.1,
             # convert_system_message_to_human=True
         )
@@ -27,12 +27,15 @@ class MarketSubAgent:
             list_market_commodities,
             list_market_states
         ]
-
+        self.today = date.today()
         # Combine old agent_kwargs prefix + suffix into a single system message
         system_prompt = SystemMessage(content=(
+            "Today's date is " + self.today.strftime("%d-%m-%Y") + "."
             "You are an agricultural market expert. "
             "Use the provided tools to answer user queries accurately. "
             "Provide clear and helpful answers for farmers and traders."
+            "If the query asks for current market prices, or just the price of a commodity, use the get_market_price tool with today's date as end date (and also start date)."
+            "Assume the place given in the query is the current location/state."
         ))
 
         # Create the ReAct agent

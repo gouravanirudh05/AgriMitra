@@ -38,6 +38,7 @@ import LanguageSelector from "./language-selector"
 import Markdown from 'react-markdown'
 import remarkGfm from 'remark-gfm'
 import ProfileEditScreen from "@/components/profile-edit"
+import './chat-screen.css'
 
 interface Message {
   id: string
@@ -863,7 +864,7 @@ export default function ChatScreen() {
                       
                       {/* Message text */}
                       {msg.text && (
-                        <div className="text-sm">
+                        <div className="text-sm table-container">
                           <Markdown remarkPlugins={[remarkGfm]}>{msg.text}</Markdown>
                         </div>
                       )}

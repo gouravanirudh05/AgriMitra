@@ -589,7 +589,7 @@ Once all necessary agent responses are collected, combine them into a single, co
                     m.pretty_print()
                 assistant_messages = [m for m in result["messages"] if getattr(m, "content", None)]
                 if assistant_messages:
-                    final_message = assistant_messages[-1].content
+                    final_message = '\n'.join([m.content for m in assistant_messages])
                 else:
                     final_message = None
 

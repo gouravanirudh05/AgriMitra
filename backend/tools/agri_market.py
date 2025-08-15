@@ -138,11 +138,10 @@ def get_agmarknet_data(session, commodity_id, state_id, commodity_name, state_na
     """
 
     
-
     AGMARKNET_DATA_BASE_URL = "https://agmarknet.gov.in/SearchCmmMkt.aspx?"
     payload = (
         f"Tx_Commodity={commodity_id}&Tx_State={state_id}&Tx_District=0&Tx_Market=0"
-        f"&DateFrom={start_dt}&DateTo={end_dt}&Fr_Date={start_dt}&To_Date={end_dt}"
+        f"&DateFrom={format_date(start_dt)}&DateTo={format_date(end_dt)}&Fr_Date={start_dt}&To_Date={end_dt}"
         f"&Tx_Trend=0&Tx_CommodityHead={commodity_name}&Tx_StateHead={state_name}"
         "&Tx_DistrictHead=--Select--&Tx_MarketHead=--Select--"
     )
@@ -158,7 +157,7 @@ def get_agmarknet_data(session, commodity_id, state_id, commodity_name, state_na
 
         soup = BeautifulSoup(get_response.text, 'html.parser')
         table = soup.find('table', {'id': 'cphBody_GridPriceData'})
-
+        # print(get_response.text)
         if table:
             rows = table.find_all('tr')
             headers = [th.text.strip().replace(' ', '_').lower() for th in rows[0].find_all('th')]
@@ -167,7 +166,7 @@ def get_agmarknet_data(session, commodity_id, state_id, commodity_name, state_na
                 cols = row.find_all('td')
                 if len(cols) >= len(headers):
                     record = {headers[i]: cols[i].text.strip() for i in range(len(headers))}
-                    record["scraped_at"] = datetime.datetime.now().isoformat()
+                    record["scraped_at"] = datetime.now().isoformat()
                     records.append(record)
                 else:
                     print(f"Skipping row due to column mismatch: {row}")
@@ -248,6 +247,43 @@ states_path = os.path.join(BASE_DIR, "../../datasets/agrimarket/states.json")
 # Normalize the path
 states_path = os.path.normpath(states_path)
 states = load_data(states_path)
+from datetime import datetime,date
+
+def format_date(date_str):
+    """
+    Takes a date string in multiple possible formats,
+    validates it, and returns it in 'DD-MMM-YYYY' format (MMM always 3 letters).
+    """
+    possible_formats = [
+        "%Y-%m-%d",
+        "%Y/%m/%d",
+        "%d-%m-%Y",
+        "%d/%m/%Y",
+        "%m-%d-%Y",
+        "%m/%d/%Y"
+    ]
+    
+    month_abbr = ["Jan", "Feb", "Mar", "Apr", "May", "Jun",
+                  "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"]
+    
+    for fmt in possible_formats:
+        try:
+            parsed_date = datetime.strptime(date_str, fmt)
+            return f"{parsed_date.day:02d}-{month_abbr[parsed_date.month - 1]}-{parsed_date.year}"
+        except ValueError:
+            continue
+    
+    # fallback to today's date if no format matched
+    today = date.today()
+    return f"{today.day:02d}-{month_abbr[today.month - 1]}-{today.year}"
+
+
+# Example usage:
+# print(format_date("2025-08-14"))  # 14-Aug-2025
+# print(format_date("14/08/2025"))  # 14-Aug-2025
+# print(format_date("08-14-2025"))  # 14-Aug-2025
+# print(format_date("2025/13/14"))  # Invalid date format.
+
 
 @tool("get_market_price")
 def get_market_price(state: str, commodity: str, start_date: str, end_date: str, district: str = None) -> str:
@@ -272,7 +308,7 @@ def get_market_price(state: str, commodity: str, start_date: str, end_date: str,
     
     # Get dropdown data
     crop_data = get_dropdown_options(session, "https://agmarknet.gov.in/", "ddlCommodity")
-    
+    print(crop_data)
     # Find IDs
     commodity_id = find_closest_crop_id(commodity, crop_data)
     state_id = find_closest_state_id(state, states)
