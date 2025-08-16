@@ -128,9 +128,8 @@ async def chat_with_ai(chat_data: ChatMessage):
                 enhanced_query,
                 conversation_id=conversation_id,
                 user_id=chat_data.userId,
-                user_context=USER_CONTEXT
-                image=chat_data.image,
-                user_id=chat_data.userId
+                user_context=USER_CONTEXT,
+                image=chat_data.image
             )
             print(chat_data.image)
             
