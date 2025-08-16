@@ -129,7 +129,10 @@ async def chat_with_ai(chat_data: ChatMessage):
                 conversation_id=conversation_id,
                 user_id=chat_data.userId,
                 user_context=USER_CONTEXT
+                image=chat_data.image,
+                user_id=chat_data.userId
             )
+            print(chat_data.image)
             
             processing_time = (datetime.utcnow() - start_time).total_seconds()
             

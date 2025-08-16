@@ -25,6 +25,8 @@ from subagents.rag_subagent import RAGSubAgent
 from subagents.youtube_subagent import YouTubeSubAgent
 from subagents.market_subagent import MarketSubAgent
 from subagents.fertilizer_subagent import FertilizerSubAgent
+from subagents.image_subagent import ImageSubAgent
+from langchain_core.tools import tool
 from langgraph_supervisor.handoff import create_forward_message_tool
 # Import tools for backward compatibility
 from tools.rag_tool import rag_tool
@@ -32,6 +34,7 @@ from tools.weather_tool import weather_tool, weather_districts_tool
 from tools.youtube_search_tool import youtube_search_tool
 from tools.agri_market import get_market_price, list_market_commodities, list_market_states
 from tools.fertilizer import get_recommendation
+from tools.image_tool import plant_analysis_tool, plant_models_tool
 
 try:
     from langgraph.prebuilt import create_react_agent, InjectedState
@@ -98,6 +101,8 @@ class LangGraphSupervisorOrchestrator:
         dirs_to_create = [
             Path(os.getenv('AGMARKNET_DATA_DIR', 'datasets')),
             Path(os.getenv('WEATHER_DOWNLOAD_DIR', 'downloads')),
+            Path('uploads'), 
+            Path('models'),
             Path('downloads'),
             Path('logs'),
             Path('subagents')
@@ -155,6 +160,7 @@ class LangGraphSupervisorOrchestrator:
         try:
             self.subagents = {
                 'weather': WeatherSubAgent(),
+                'image':ImageSubAgent(),
                 # 'knowledge': RAGSubAgent(),
                 # 'youtube': YouTubeSubAgent(),
                 'market': MarketSubAgent(),
@@ -166,6 +172,10 @@ class LangGraphSupervisorOrchestrator:
             for name, subagent in self.subagents.items():
                 try:
                     capabilities = subagent.get_capabilities()
+                    if not hasattr(subagent, 'agent_executor') or subagent.agent_executor is None:
+                        logger.warning(f"Subagent {name} missing agent_executor, creating placeholder")
+                    # Create a minimal agent_executor if missing
+                        subagent.agent_executor = subagent
                     valid_subagents[name] = subagent
                     logger.info(f"✅ Subagent validated: {capabilities['name']}")
                 except Exception as e:
@@ -198,20 +208,21 @@ Instructions:
 1. Analyze the query content and intent carefully
 2. Consider the user's specific needs and requirements
 3. Choose the MOST APPROPRIATE single agent for this query
-4. For video/tutorial requests: Use youtube agent
-5. For weather/climate queries: Use weather agent  
-6. For market/price queries: Use market agent
-7. For fertilizer recommendations: Use fertilizer agent
-8. For general knowledge/information: Use knowledge agent
+4. For image analysis/plant disease queries: Use image agent
+5. For video/tutorial requests: Use youtube agent
+6. For weather/climate queries: Use weather agent  
+7. For market/price queries: Use market agent
+8. For fertilizer recommendations: Use fertilizer agent
+9. For general knowledge/information: Use knowledge agent
 
-Response with ONLY the agent name (weather, youtube, market, fertilizer, or knowledge):"""
+Response with ONLY the agent name (weather,image, youtube, market, fertilizer, or knowledge):"""
 
             # Get routing decision from Gemini
             routing_message = HumanMessage(content=routing_prompt)
             response = await self.routing_llm.ainvoke([routing_message])
             
             # # Extract agent name from response
-            agent_choice = re.search(r'\b(weather|youtube|market|knowledge|fertilizer)\b', response.content.lower())
+            agent_choice = re.search(r'\b(weather|image|youtube|market|knowledge|fertilizer)\b', response.content.lower())
             agent_choice = agent_choice.group(1) if agent_choice else response.content.strip().lower()
             
             # Validate and clean the response
@@ -374,44 +385,61 @@ Response with ONLY the agent name (weather, youtube, market, fertilizer, or know
         subagent_node_func.__name__ = f"{subagent_name}_node_func"
         return subagent_node_func
     
+    
     def _create_langgraph_supervisor(self):
         """Create LangGraph supervisor with subagent integration"""
         if self.supervisor_graph is not None:
             logger.info("LangGraph supervisor already exists, skipping creation")
             return
-            
+        
         try:
             # Create the graph
-            graph_builder = StateGraph(MessagesState)
-            
-            # First, add the supervisor node
             if LANGGRAPH_REACT_AVAILABLE:
                 logger.info("Using create_react_agent for supervisor")
-                agent_objs = [sa.agent_executor for sa in self.subagents.values()]
-                # Create supervisor agent
-                forwarding_tool = create_forward_message_tool("supervisor")
-                supervisor_agent = create_supervisor(
-                    model=self.routing_llm,  # Use routing LLM for supervisor
-                    agents=agent_objs,
-                    prompt=self._get_supervisor_system_message(),
-                    tools=[forwarding_tool],
-                    name="supervisor",
-                    output_mode = "last_message",
-                    add_handoff_back_messages=False,
-                    # add_handoff_messages=False,
-                    handoff_tool_prefix="consult_with"
-                )
-                try:
-                    supervisor_agent = supervisor_agent.compile()
-                except Exception as e:
-                    print("Error compiling supervisor agent:", e)
                 
-            # Try to compile the graph
-            # logger.info("Attempting to compile the graph...")
-            self.supervisor_graph = supervisor_agent
-            
-            logger.info("🎯 LangGraph supervisor created successfully")
-            logger.info(f"📊 Available agents: {list(self.subagents.keys())}")
+                # Create tools that delegate to subagents
+                supervisor_tools = []
+                
+                # Create a tool for each subagent
+                for name, subagent in self.subagents.items():
+                    # Create the tool function with proper closure
+                    def make_tool_func(agent_name, agent_obj):
+                        def consult_agent(query: str) -> str:
+                            """Consult with the agent for specialized tasks."""
+                            try:
+                                result = agent_obj.process_query(query)
+                                if result.get('success'):
+                                    return result.get('summary', result.get('response', 'No response available'))
+                                else:
+                                    return f"Error from {agent_name} agent: {result.get('error', 'Unknown error')}"
+                            except Exception as e:
+                                return f"Error consulting {agent_name} agent: {str(e)}"
+                        
+                        # Apply tool decorator with proper description
+                        tool_instance = tool(
+                            consult_agent,
+                            description=f"Consult with the {agent_name} agent for specialized tasks. Use this when the user's query is related to {agent_name} domain."
+                        )
+                        
+                        # Set the name attribute after tool creation
+                        tool_instance.name = f"consult_{agent_name}_agent"
+                        
+                        return tool_instance
+                    
+                    # Create and add the tool
+                    tool_instance = make_tool_func(name, subagent)
+                    supervisor_tools.append(tool_instance)
+                
+                # Create supervisor using create_react_agent with system message configured in model
+                model_with_system = self.routing_llm.bind(system=self._get_supervisor_system_message())
+                
+                self.supervisor_graph = create_react_agent(
+                    model=model_with_system,
+                    tools=supervisor_tools
+                )
+                
+                logger.info("LangGraph supervisor created successfully")
+                logger.info(f"Available agents: {list(self.subagents.keys())}")
             
         except Exception as e:
             logger.error(f"Failed to create LangGraph supervisor: {e}")
@@ -421,8 +449,7 @@ Response with ONLY the agent name (weather, youtube, market, fertilizer, or know
             logger.info("Falling back to direct subagent routing...")
             self.use_langgraph_supervisor = False
             
-            raise RuntimeError(f"LangGraph supervisor creation failed: {e}")
-    
+            raise RuntimeError(f"LangGraph supervisor creation failed: {e}")   
     def _get_supervisor_system_message(self) -> str:
         """Get system message for the supervisor"""
         today = date.today()
@@ -440,7 +467,10 @@ Response with ONLY the agent name (weather, youtube, market, fertilizer, or know
                 available_agents.append("- **Market Agent**: For agricultural prices, market rates, and commodity information")
             elif name == 'fertilizer':
                 available_agents.append("- **Fertilizer Agent**: For fertilizer recommendations and information")
-        
+            elif name == 'image':
+                available_agents.append("- **Image Agent**: For plant disease detection, crop analysis, and agricultural image diagnosis")
+
+# The complete available agents section should look like:
         agents_list = "\n".join(available_agents)
         
         return f"""Today's date is {today_str}.
@@ -501,6 +531,8 @@ Once all necessary agent responses are collected, combine them into a single, co
             get_market_price,
             list_market_commodities,
             list_market_states,
+            plant_analysis_tool,  
+            plant_models_tool 
         ]
         
         valid_tools = []
@@ -577,9 +609,18 @@ Once all necessary agent responses are collected, combine them into a single, co
         user_context = kwargs.get("user_context", {})
         if not self.is_initialized:
             raise RuntimeError("Orchestrator not initialized. Call initialize() first.")
+        image = kwargs.get('image')
+        user_id = kwargs.get('user_id', 'default_user')
+        conversation_id = kwargs.get('conversation_id', 'default_conv')
+        
         if self.use_langgraph_supervisor and self.supervisor_graph:
             try:
                 logger.info(f"🔍 Processing query: {message[:100]}...")
+                if image and image.strip():
+                # Include image data in the message
+                    full_message = f"{message}\ndata:image/jpeg;base64,{image.strip()}"
+                else:
+                    full_message = message
                 result = self.supervisor_graph.invoke({
                     "messages": [
                         HumanMessage(content=f"User Context: User lives in state of {user_context['state']} and district of {user_context['district']}. His name is {user_context['name']}. Today's date is {date.today().strftime('%d-%m-%Y')}."),
