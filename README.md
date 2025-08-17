@@ -1,4 +1,4 @@
-# 🌾 Agricultural AI Assistant with LangGraph Supervisor
+# Agricultural AI Assistant with LangGraph Supervisor
 
 [![Python 3.8+](https://img.shields.io/badge/python-3.8+-blue.svg)](https://www.python.org/downloads/)
 [![LangGraph](https://img.shields.io/badge/LangGraph-latest-green.svg)](https://github.com/langchain-ai/langgraph)
@@ -6,54 +6,54 @@
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 [![PRs Welcome](https://img.shields.io/badge/PRs-welcome-brightgreen.svg)](http://makeapullrequest.com)
 
-> An intelligent, multi-agent agricultural assistant powered by Google's Gemini AI and LangGraph supervisor pattern, designed specifically for Indian farmers and agricultural professionals. Built with government data sources and zero external API dependencies except Google's Gemini.
+> An intelligent, multi-agent agricultural assistant powered by LangGraph supervisor pattern and Gemini AI, designed specifically for Indian farmers and agricultural professionals. Built with government data sources and zero external API dependencies except Google's Gemini.
 
-## 📋 Table of Contents
+## Table of Contents
 
-- [🎯 Overview](#-overview)
-- [✨ Features](#-features)
-- [🏗️ Architecture](#️-architecture)
-- [🚀 Quick Start](#-quick-start)
-- [📊 Data Sources](#-data-sources)
-- [🔧 Configuration](#-configuration)
-- [📖 API Documentation](#-api-documentation)
-- [🧪 Testing](#-testing)
-- [🚀 Deployment](#-deployment)
-- [🤝 Contributing](#-contributing)
-- [📞 Support](#-support)
+- [Overview](#-overview)
+- [Features](#-features)
+- [Architecture](#️-architecture)
+- [Quick Start](#-quick-start)
+- [Data Sources](#-data-sources)
+- [Configuration](#-configuration)
+- [API Documentation](#-api-documentation)
+- [Testing](#-testing)
+- [Deployment](#-deployment)
+- [Contributing](#-contributing)
+- [Support](#-support)
 
-## 🎯 Overview
+## Overview
 
-The Agricultural AI Assistant is a sophisticated, production-ready system that provides comprehensive agricultural guidance through specialized AI agents. Built specifically for the Indian agricultural ecosystem, it leverages government data sources and intelligent routing to deliver accurate, contextual assistance to farmers and agricultural professionals.
+The Agricultural AI Assistant is a sophisticated, production-ready system that provides comprehensive agricultural guidance through specialized multi AI agents. Built specifically for the Indian agricultural ecosystem, it leverages government data sources and intelligent routing to deliver accurate, contextual assistance to farmers and agricultural professionals.
 
-### 🌟 Key Highlights
+###  Key Highlights
 
-- **🇮🇳 India-First Design**: Built with Indian government data sources (IMD, AgMarkNet, Soil Health Cards)
-- **🧠 Intelligent Routing**: Gemini-powered query classification and agent selection
-- **🔄 Multi-Agent Architecture**: Specialized agents for different agricultural domains
-- **📱 Production Ready**: Full-stack solution with React frontend and FastAPI backend
-- **🆓 Cost Effective**: Only requires Google API key, all other data from free government sources
-- **⚡ High Performance**: Asynchronous processing with conversation memory
+- **India-First Design**: Built with Indian government data sources (IMD, AgMarkNet, Soil Health Cards,KCC queries)
+- **Intelligent Routing**: Orchestration-powered query classification and agent selection
+- **Multi-Agent Architecture**: Specialized agents for different agricultural subtasks
+- **Production Ready**: Full-stack solution with React frontend and FastAPI backend
+- **Cost Effective**: Only requires Google API key(free), all other data from free government sources
+- **High Performance**: Asynchronous processing with conversation memory and user profile details.
 
-## ✨ Features
+## Features
 
-### 🎯 Core Capabilities
+### Core Capabilities
 
-| Feature | Description | Status |
-|---------|-------------|--------|
-| **🌤️ Weather Intelligence** | Real-time weather data from IMD with 7-day forecasts | ✅ Active |
-| **📈 Market Analytics** | Live commodity prices from AgMarkNet across all Indian markets | ✅ Active |
-| **🌱 Smart Fertilizer Recommendations** | Personalized suggestions based on Soil Health Card data | ✅ Active |
-| **🔍 Plant Disease Detection** | AI-powered image analysis for crop health assessment | ✅ Active |
-| **📚 Knowledge Management** | RAG system with government policies and agricultural best practices | ✅ Active |
-| **🎥 Educational Content** | Curated video recommendations for agricultural learning | ✅ Active |
-| **💬 Contextual Conversations** | Memory-enabled chat with user profile awareness | ✅ Active |
-| **🌐 Multi-Language Support** | Hindi and English language support | 🔄 In Progress |
+| Feature | Description | 
+|---------|-------------|
+| **Weather Intelligence** | Real-time weather data from IMD with 7-day forecasts |
+| **Market Analytics** | Live commodity prices from AgMarkNet across all Indian markets |
+| **Smart Fertilizer Recommendations** | Personalized suggestions based on Soil Health Card data |
+| **Plant Disease Detection** | ML-powered image analysis for crop health assessment and cure |
+| **Knowledge Management** | RAG system with government policies and agricultural best practices |
+| **Educational Content** | Curated video recommendations for agricultural learning |
+| **Contextual Conversations** | Memory-enabled chat with user profile awareness | 
+| **Multi-Language Support** | Hindi and English language support |
 
-### 🤖 Specialized Agents
+### Specialized Agents
 
 <details>
-<summary><b>🌤️ Weather Agent</b></summary>
+<summary><b>Weather Agent</b></summary>
 
 **Data Source**: India Meteorological Department (IMD)
 - Current weather conditions for any Indian location
@@ -70,7 +70,7 @@ The Agricultural AI Assistant is a sophisticated, production-ready system that p
 </details>
 
 <details>
-<summary><b>📈 Market Agent</b></summary>
+<summary><b>Market Agent</b></summary>
 
 **Data Source**: AgMarkNet (Government Agricultural Marketing)
 - Real-time commodity prices across 8,000+ markets
@@ -87,7 +87,7 @@ The Agricultural AI Assistant is a sophisticated, production-ready system that p
 </details>
 
 <details>
-<summary><b>🌱 Fertilizer Agent</b></summary>
+<summary><b>Fertilizer Agent</b></summary>
 
 **Data Source**: Soil Health Card Database
 - Personalized fertilizer recommendations
@@ -119,7 +119,7 @@ The Agricultural AI Assistant is a sophisticated, production-ready system that p
 - Treatment recommendations with local solutions
 - Severity assessment and spread prediction
 
-<summary><b>📚 Knowledge Agent</b></summary>
+<summary><b>Knowledge Agent</b></summary>
 
 **Data Sources**: 
 - Government agricultural magazines and publications
@@ -136,7 +136,7 @@ The Agricultural AI Assistant is a sophisticated, production-ready system that p
 </details>
 
 <details>
-<summary><b>🎥 YouTube Agent</b></summary>
+<summary><b>YouTube Agent</b></summary>
 
 **Technology**: Intelligent web scraping and content curation
 - Educational video recommendations
@@ -152,7 +152,7 @@ The Agricultural AI Assistant is a sophisticated, production-ready system that p
 - Expert channel prioritization
 </details>
 
-## 🏗️ Architecture
+## Architecture
 
 ### System Architecture Diagram
 
@@ -202,3 +202,24 @@ graph TB
    IA --> ML
    KA --> GOV
    YA --> YT
+
+sequenceDiagram
+    participant User
+    participant Frontend
+    participant API
+    participant Supervisor
+    participant GeminiRouter
+    participant Agent
+    participant DataSource
+    
+    User->>Frontend: Query + Context
+    Frontend->>API: HTTP Request
+    API->>Supervisor: Process Query
+    Supervisor->>GeminiRouter: Classify Query
+    GeminiRouter->>Agent: Route to Specialist
+    Agent->>DataSource: Fetch Data
+    DataSource-->>Agent: Return Data
+    Agent-->>Supervisor: Processed Response
+    Supervisor-->>API: Final Response
+    API-->>Frontend: JSON Response
+    Frontend-->>User: Formatted Answer   
