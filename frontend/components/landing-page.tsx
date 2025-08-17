@@ -21,7 +21,7 @@ export default function LandingPage() {
       {/* Header */}
       <header className="container mx-auto px-4 py-6 flex justify-between items-center">
         <div className="flex items-center space-x-2">
-          <div className="p-2 bg-green-600 rounded-lg">
+          <div className="p-2 bg-gradient-to-r from-orange-500 to-green-600 rounded-lg">
             <Sprout className="h-6 w-6 text-white" />
           </div>
           <span className="text-2xl font-bold text-green-800">AgriMitra</span>
@@ -29,22 +29,51 @@ export default function LandingPage() {
         <LanguageSelector />
       </header>
 
-      {/* Hero Section */}
-      <section className="container mx-auto px-4 py-16 text-center">
-        <div className="max-w-4xl mx-auto">
-          <h1 className="text-4xl md:text-6xl font-bold text-gray-900 mb-6">{t("landing.hero.title")}</h1>
-          <p className="text-xl md:text-2xl text-gray-600 mb-8">{t("landing.hero.subtitle")}</p>
+      {/* Hero Section with Background Video */}
+      <section className="relative container mx-auto px-4 py-16 text-center overflow-hidden">
+        {/* Background Video */}
+        <video
+          autoPlay
+          loop
+          muted
+          playsInline
+          className="absolute inset-0 w-full h-full object-cover z-0"
+        >
+          <source src="video.mp4" type="video/mp4" />
+          Your browser does not support the video tag.
+        </video>
+
+        {/* Dark Overlay for readability */}
+        <div className="absolute inset-0 bg-black/40 z-10" />
+
+        {/* Hero Content */}
+        <div className="relative z-20 max-w-4xl mx-auto">
+          <h1 className="text-4xl md:text-6xl font-bold text-white mb-6">
+            {t("landing.hero.title")}
+          </h1>
+          <p className="text-xl md:text-2xl text-gray-200 mb-8">
+            {t("landing.hero.subtitle")}
+          </p>
           <div className="flex flex-col sm:flex-row gap-4 justify-center">
-            <Button size="lg" className="text-lg px-8 py-6" onClick={() => setShowAuth(true)}>
+            <Button
+              size="lg"
+              className="text-lg px-8 py-6"
+              onClick={() => setShowAuth(true)}
+            >
               {t("landing.hero.getStarted")}
               <ArrowRight className="ml-2 h-5 w-5" />
             </Button>
-            <Button variant="outline" size="lg" className="text-lg px-8 py-6 bg-transparent">
+            <Button
+              variant="outline"
+              size="lg"
+              className="text-lg px-8 py-6 bg-transparent text-white border-white hover:bg-white/20"
+            >
               {t("landing.hero.learnMore")}
             </Button>
           </div>
         </div>
       </section>
+
 
       {/* Features Section */}
       <section className="container mx-auto px-4 py-16">
@@ -154,12 +183,14 @@ export default function LandingPage() {
       <footer className="bg-gray-900 text-white py-8">
         <div className="container mx-auto px-4 text-center">
           <div className="flex items-center justify-center space-x-2 mb-4">
-            <div className="p-2 bg-green-600 rounded-lg">
+            <div className="p-2 bg-gradient-to-r from-orange-500 to-green-600 rounded-lg">
               <Sprout className="h-5 w-5 text-white" />
             </div>
             <span className="text-xl font-bold">AgriMitra</span>
+             
           </div>
           <p className="text-gray-400">{t("landing.footer.copyright")}</p>
+          <span className="text-gray-400 font-bold">Built with ❤️ for the common man</span>
         </div>
       </footer>
     </div>

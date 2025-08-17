@@ -820,10 +820,10 @@ export default function ChatScreen() {
 
               {/* Settings & Language */}
               <div className="pt-4 border-t space-y-3">
-                <div className="flex items-center gap-2 mb-2">
+                {/* <div className="flex items-center gap-2 mb-2">
                   <Settings className="h-4 w-4 text-gray-500" />
                   <span className="text-sm font-medium text-gray-900">{t("nav.settings")}</span>
-                </div>
+                </div> */}
                 <Button variant="ghost" className="w-full justify-start h-10">
                   <HelpCircle className="h-4 w-4 mr-3" />
                   {t("nav.help")}

@@ -242,8 +242,8 @@ def get_recommendation(district_name, crop_name, npk_oc):
         if not items:
             return None
         match_name, score, idx = process.extractOne(
-            name,
-            [item["name"] for item in items],
+            name.lower(),
+            [item["name"].lower() for item in items],
             scorer=fuzz.token_sort_ratio
         )
         return items[idx] if score > 60 else None  # score threshold to avoid bad matches
