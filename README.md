@@ -203,6 +203,9 @@ graph TB
    KA --> GOV
    YA --> YT
 
+```
+### Basic Sequence Diagram
+```mermaid
 sequenceDiagram
     participant User
     participant Frontend
@@ -223,3 +226,75 @@ sequenceDiagram
     Supervisor-->>API: Final Response
     API-->>Frontend: JSON Response
     Frontend-->>User: Formatted Answer   
+```
+
+## Quick Start and Setup
+
+### Prequisites
+- Python 3.8+ installed
+- Node.js 16+ and npm
+- Google API Key (only external dependency)
+- Git for version control
+
+**Step1**
+```
+git clone https://github.com/gouravanirudh05/AgriMitra
+
+cd AgriMitra
+```
+**Step2**
+#### Automated Setup
+Our intelligent setup script handles everything automatically:
+```
+python setup.py
+```
+#### Manual Setup
+##### Backend
+```
+# Navigate to backend
+cd backend
+
+# Create virtual environment
+python -m venv venv
+
+# Activate virtual environment
+# Windows:
+venv\Scripts\activate
+# macOS/Linux:
+source venv/bin/activate
+
+# Install dependencies
+pip install -r requirements.txt
+
+# Setup government data sources to create faiss_store(Local vector Database)
+python store.py
+```
+##### Environment Configuration
+Create .env file in backend/ directory:
+```
+GOOGLE_API_KEY=your-api-key  
+USE_LANGGRAPH_SUPERVISOR=true
+```
+##### Frontend
+```
+# Navigate to frontend (from project root)
+cd frontend
+
+# Install dependencies
+npm install
+
+# Start development server
+npm run dev
+```
+##### Google API Key Setup
+
+1. Visit the [Google Cloud Console][gcp-console]
+2. Create a new project or select existing
+3. Enable **Generative AI API**
+4. Create API Key credentials
+5. Add to your `.env` file
+
+[gcp-console]: https://console.cloud.google.com/
+
+
+Note: The Google API key is the only external dependency. All other data comes from free government sources!
