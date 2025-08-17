@@ -213,3 +213,4 @@ temp
 __pycache__
 frontend/package-lock.json
 backend/myenv
+backend/uploads

@@ -67,6 +67,8 @@ Now, following the rules above, either:
         """Return a YouTube video URL based on the query and final answer."""
         
         search_query = self._create_search_query(user_query, final_answer)
+        if search_query=="NO_VIDEO":
+            return ""
         video_url = self.tool(search_query)  # Assumes tool returns a URL
         
         if video_url:

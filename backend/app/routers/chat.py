@@ -153,6 +153,8 @@ async def chat_with_ai(chat_data: ChatMessage):
                 yt_link.append(youtube_agent_link.get_youtube_video(enhanced_query, ai_response))
             except Exception as e:
                 logger.error(f"Error getting YouTube video link: {e}")
+            if yt_link[0]=="":
+                yt_link = []
         except HTTPException:
             raise
         except Exception as e:
