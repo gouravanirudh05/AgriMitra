@@ -12,7 +12,7 @@ import logging
 from typing import Dict, Any, Optional
 from subagents.youtube_agent_summary import YouTubeAgentLink, get_YouTubeAgentLink
 from googletrans import Translator
-
+from app.store import IMGSTORE
 translator = Translator()
 
 # Import the enhanced orchestrator
@@ -25,7 +25,6 @@ router = APIRouter()
 
 # Global orchestrator instance
 orchestrator_instance: Optional[AgentOrchestrator] = None
-
 
 async def get_orchestrator_instance() -> AgentOrchestrator:
     """Get the global orchestrator instance"""
@@ -85,6 +84,8 @@ async def chat_with_ai(chat_data: ChatMessage):
             )
         USER_CONTEXT = {"state": user['state'] or "", "district": user['district'] or "", "name": user['name'] or ""}
         print(USER_CONTEXT)
+
+        IMGSTORE[chat_data.conversationId] = chat_data.image if chat_data.image else None
         # Get orchestrator (NEW)
         try:
             orchestrator = await get_orchestrator_instance()
@@ -175,6 +176,7 @@ async def chat_with_ai(chat_data: ChatMessage):
             "text": final_response,
             "isUser": False,
             "timestamp": datetime.utcnow(),
+            "youtube": yt_link,
             "metadata": {
                 "processing_time": processing_time,
                 "tools_used": result.get('tools_used', []),
@@ -200,7 +202,7 @@ async def chat_with_ai(chat_data: ChatMessage):
             }
             await db.conversations.insert_one(conv_doc)
 
-        return ChatResponse(response=final_response, conversationId=conversation_id)
+        return ChatResponse(response=final_response, conversationId=conversation_id, youtube=yt_link)
 
     except HTTPException:
         raise

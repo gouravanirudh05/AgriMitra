@@ -160,8 +160,8 @@ class LangGraphSupervisorOrchestrator:
         try:
             self.subagents = {
                 'weather': WeatherSubAgent(),
+                'knowledge': RAGSubAgent(),
                 'image':ImageSubAgent(),
-                # 'knowledge': RAGSubAgent(),
                 # 'youtube': YouTubeSubAgent(),
                 'market': MarketSubAgent(),
                 'fertilizer': FertilizerSubAgent()
@@ -397,46 +397,29 @@ Response with ONLY the agent name (weather,image, youtube, market, fertilizer, o
             if LANGGRAPH_REACT_AVAILABLE:
                 logger.info("Using create_react_agent for supervisor")
                 
-                # Create tools that delegate to subagents
-                supervisor_tools = []
-                
-                # Create a tool for each subagent
-                for name, subagent in self.subagents.items():
-                    # Create the tool function with proper closure
-                    def make_tool_func(agent_name, agent_obj):
-                        def consult_agent(query: str) -> str:
-                            """Consult with the agent for specialized tasks."""
-                            try:
-                                result = agent_obj.process_query(query)
-                                if result.get('success'):
-                                    return result.get('summary', result.get('response', 'No response available'))
-                                else:
-                                    return f"Error from {agent_name} agent: {result.get('error', 'Unknown error')}"
-                            except Exception as e:
-                                return f"Error consulting {agent_name} agent: {str(e)}"
-                        
-                        # Apply tool decorator with proper description
-                        tool_instance = tool(
-                            consult_agent,
-                            description=f"Consult with the {agent_name} agent for specialized tasks. Use this when the user's query is related to {agent_name} domain."
-                        )
-                        
-                        # Set the name attribute after tool creation
-                        tool_instance.name = f"consult_{agent_name}_agent"
-                        
-                        return tool_instance
-                    
-                    # Create and add the tool
-                    tool_instance = make_tool_func(name, subagent)
-                    supervisor_tools.append(tool_instance)
-                
-                # Create supervisor using create_react_agent with system message configured in model
-                model_with_system = self.routing_llm.bind(system=self._get_supervisor_system_message())
-                
-                self.supervisor_graph = create_react_agent(
-                    model=model_with_system,
-                    tools=supervisor_tools
+                agent_objs = [sa.agent_executor for sa in self.subagents.values()]
+                # Create supervisor agent
+                forwarding_tool = create_forward_message_tool("supervisor")
+                supervisor_agent = create_supervisor(
+                    model=self.routing_llm,  # Use routing LLM for supervisor
+                    agents=agent_objs,
+                    prompt=self._get_supervisor_system_message(),
+                    tools=[forwarding_tool],
+                    name="supervisor",
+                    output_mode = "last_message",
+                    add_handoff_back_messages=False,
+                    # add_handoff_messages=False,
+                    handoff_tool_prefix="consult_with"
                 )
+                try:
+                    supervisor_agent = supervisor_agent.compile()
+                except Exception as e:
+                    print("Error compiling supervisor agent:", e)
+                
+                # Try to compile the graph
+                # logger.info("Attempting to compile the graph...")
+                self.supervisor_graph = supervisor_agent
+            
                 
                 logger.info("LangGraph supervisor created successfully")
                 logger.info(f"Available agents: {list(self.subagents.keys())}")
@@ -481,6 +464,7 @@ You are an intelligent supervisor managing specialized agents for agricultural a
 {agents_list}
 
 **Instructions:**
+0. Always call the image agent first, if the image has been provided. 
 1. **Analyze each query intelligently** to determine which agent can best handle it
 2. You may assign work to **one or more agents** one after the other if the query spans multiple domains.
 3. **Provide clear, detailed task descriptions** to each agent you call.
@@ -616,15 +600,10 @@ Once all necessary agent responses are collected, combine them into a single, co
         if self.use_langgraph_supervisor and self.supervisor_graph:
             try:
                 logger.info(f"🔍 Processing query: {message[:100]}...")
-                if image and image.strip():
-                # Include image data in the message
-                    full_message = f"{message}\ndata:image/jpeg;base64,{image.strip()}"
-                else:
-                    full_message = message
                 result = self.supervisor_graph.invoke({
                     "messages": [
-                        HumanMessage(content=f"User Context: User lives in state of {user_context['state']} and district of {user_context['district']}. His name is {user_context['name']}. Today's date is {date.today().strftime('%d-%m-%Y')}."),
-                        HumanMessage(content=message)
+                        HumanMessage(content=f"CONVERSATIONID:{conversation_id}|User Context: User lives in state of {user_context['state']} and district of {user_context['district']}. His name is {user_context['name']}. Today's date is {date.today().strftime('%d-%m-%Y')}. {image!=None and 'Image data provided' or 'No image data provided'}."),
+                        HumanMessage(content=message, image=image)
                     ]
                 })
                 logger.info(f"✅ LangGraph supervisor completed successfully")

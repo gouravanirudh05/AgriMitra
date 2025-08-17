@@ -4,6 +4,8 @@ import logging
 from typing import Dict, Any, Optional
 from langchain_google_genai import ChatGoogleGenerativeAI
 from tools.rag_tool import rag_tool
+from langchain_core.messages import SystemMessage
+from langgraph.prebuilt import create_react_agent
 
 logger = logging.getLogger(__name__)
 
@@ -12,9 +14,8 @@ class RAGSubAgent:
     
     def __init__(self):
         self.llm = ChatGoogleGenerativeAI(
-            model="gemini-2.0-flash-exp",
-            temperature=0.1,
-            convert_system_message_to_human=True,
+            model="gemini-2.0-flash",
+            temperature=0.2,
             safety_settings={
                 7: 0,  # HARM_CATEGORY_HARASSMENT: BLOCK_NONE
                 8: 0,  # HARM_CATEGORY_HATE_SPEECH: BLOCK_NONE
@@ -22,9 +23,25 @@ class RAGSubAgent:
                 10: 0, # HARM_CATEGORY_DANGEROUS_CONTENT: BLOCK_NONE
             }
         )
-        self.tool = rag_tool
+        self.tools = [rag_tool]
         self.name = "Knowledge Subagent"
         self.description = "Handles knowledge base searches, agricultural information, government schemes, and document retrieval with intelligent fallback responses"
+
+        self.system_prompt = SystemMessage(content=(
+            "You are an agricultural knowledge assistant. "
+            "Use the knowledge base search tool to retrieve accurate information "
+            "about crops, farming practices, government schemes, and rural development. "
+            "If the retrieved information is insufficient, provide a clear, concise fallback response. "
+            "Always keep answers farmer-friendly, structured, and under 200 words unless detailed explanation is requested."
+        ))
+        
+        self.agent_executor = create_react_agent(
+            name="knowledge-agent",
+            model=self.llm,
+            tools=self.tools,
+            prompt=self.system_prompt
+        )
+        
     
     def process_query(self, query: str, context: Optional[str] = None) -> Dict[str, Any]:
         """Process knowledge base queries with enhanced fallback capabilities"""

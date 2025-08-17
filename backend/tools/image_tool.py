@@ -6,7 +6,6 @@ from pathlib import Path
 from typing import Dict, Any, Optional
 import numpy as np
 from PIL import Image
-import tensorflow as tf
 from langchain_core.tools import tool
 
 # Set up logging
@@ -110,7 +109,7 @@ def base64_image_to_file(base64_string: str, output_filepath: str) -> bool:
         logger.error(f"Error saving file: {e}")
         return False
 
-def load_model(model_name: str) -> Optional[tf.keras.Model]:
+def load_model(model_name: str):
     """
     Load a Keras model with caching.
     
@@ -120,6 +119,15 @@ def load_model(model_name: str) -> Optional[tf.keras.Model]:
     Returns:
         tf.keras.Model or None: Loaded model or None if failed
     """
+    import tensorflow as tf
+    import tensorflow_hub as hub
+
+    MODEL_FILE = "models/plm.keras"
+    vit_model = hub.load("https://tfhub.dev/sayakpaul/vit_r50_l32_fe/1")
+
+    def vit_features(x):
+        return vit_model(x)
+    
     if model_name in _loaded_models:
         return _loaded_models[model_name]
         
@@ -129,7 +137,7 @@ def load_model(model_name: str) -> Optional[tf.keras.Model]:
         return None
         
     try:
-        model = tf.keras.models.load_model(model_path)
+        model = tf.keras.models.load_model(model_path,custom_objects={'KerasLayer': hub.KerasLayer,'vit_features': vit_features})
         _loaded_models[model_name] = model
         logger.info(f"Model loaded successfully: {model_name}")
         return model
@@ -171,7 +179,7 @@ def preprocess_image(image_path: str, target_size: tuple = (224, 224)) -> Option
         logger.error(f"Error preprocessing image: {e}")
         return None
 
-def predict_disease(model: tf.keras.Model, image_array: np.ndarray, class_names: list) -> Dict[str, Any]:
+def predict_disease(model, image_array: np.ndarray, class_names: list) -> Dict[str, Any]:
     """
     Make disease prediction using the model.
     

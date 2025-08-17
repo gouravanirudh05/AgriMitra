@@ -7,7 +7,11 @@ from pydantic import BaseModel, Field
 import os
 import faiss
 import pickle
-from sentence_transformers import SentenceTransformer
+import os
+import sys
+# sys.modules["tensorflow"] = None
+# sys.modules["tf_keras"] = None
+
 from typing import List, Optional
 import numpy as np
 import logging
@@ -22,7 +26,23 @@ class SentenceTransformerEmbeddings(Embeddings):
     """Custom embeddings class for sentence-transformers to work with LangChain"""
     
     def __init__(self, model_name: str = "sentence-transformers/all-MiniLM-L6-v2"):
+        # fix issues with tensorflow and tf_keras
+        import os
+        os.environ["TRANSFORMERS_NO_TF"] = "1"
+        saved_tf = sys.modules.get("tensorflow")
+        saved_tf_keras = sys.modules.get("tf_keras")
+        sys.modules["tensorflow"] = None
+        sys.modules["tf_keras"] = None
+        from sentence_transformers import SentenceTransformer
         self.model = SentenceTransformer(model_name)
+        if saved_tf is not None:
+            sys.modules["tensorflow"] = saved_tf
+        else:
+            sys.modules.pop("tensorflow", None)
+        if saved_tf_keras is not None:
+            sys.modules["tf_keras"] = saved_tf_keras
+        else:
+            sys.modules.pop("tf_keras", None)
     
     def embed_documents(self, texts: List[str]) -> List[List[float]]:
         """Embed a list of documents"""
