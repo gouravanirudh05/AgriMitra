@@ -7,6 +7,9 @@
 [![PRs Welcome](https://img.shields.io/badge/PRs-welcome-brightgreen.svg)](http://makeapullrequest.com)
 
 > An intelligent, multi-agent agricultural assistant powered by LangGraph supervisor pattern and Gemini AI, designed specifically for Indian farmers and agricultural professionals. Built with government data sources and zero external API dependencies except Google's Gemini.
+## 🎥 Demo Video
+
+[![Watch the Demo](https://img.youtube.com/vi/vavG5e0Nzqw/0.jpg)](https://youtu.be/vavG5e0Nzqw)
 
 ## Table of Contents
 
@@ -298,3 +301,20 @@ npm run dev
 
 
 Note: The Google API key is the only external dependency. All other data comes from free government sources!
+
+## Data Sources
+
+
+| Source | Type | Link |
+|--------|------|------|
+| KCC Call Center Dataset | Farmer FAQs (100k Q&A) | [🔗 data.gov.in](https://www.data.gov.in/resource/kisan-call-centre-kcc-transcripts-farmers-queries-answers) |
+| IMD AgriMet | Weather forecasts (7-day, district-level) | [🔗 imdagrimet.gov.in](https://imdagrimet.gov.in/) |
+| AgMarkNet | Market prices (3,000+ mandis) | [🔗 agmarknet.gov.in](https://agmarknet.gov.in/) |
+| Mandi Prices | Daily commodity prices | [🔗 data.gov.in](https://www.data.gov.in/catalog/current-daily-price-various-commodities-various-markets-mandi) |
+| Soil Health Card | Fertilizer recommendations | [🔗 soilhealth.dac.gov.in](https://soilhealth.dac.gov.in/fertilizer-dosage) |
+| Farmer’s Handbook | General agricultural practices | [🔗 manage.gov.in](https://www.manage.gov.in/publications/farmerbook.pdf) |
+| AgriWelfare Magazines | Government agriculture articles | [🔗 agriwelfare.gov.in](https://agriwelfare.gov.in/en/Magazine) |
+| PlantVillage Dataset | 70k+ crop disease images | [🔗 Kaggle](https://www.kaggle.com/datasets/tushar5harma/plant-village-dataset-updated/data) |
+| Government Schemes Corpus | PM-KISAN, PMFBY, KCC, etc. | [🔗 Kaggle](https://www.kaggle.com/datasets/jainamgada45/indian-government-schemes) |
+| CGIAR Corpus | Agricultural research papers | [🔗 HuggingFace](https://huggingface.co/datasets/CGIAR/gardian-cigi-ai-documents) |
+
