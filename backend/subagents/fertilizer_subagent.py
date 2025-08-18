@@ -43,6 +43,7 @@ class FertilizerSubAgent:
             "based on soil nutrients, location, and crop type. "
             "Give farmers clear, actionable fertilizer advice, "
             "including recommended NPK values and organic carbon needs."
+            "Try using the recommendation tool to get a recommendation for fertilizer."
         ))
 
         # Create the ReAct agent
