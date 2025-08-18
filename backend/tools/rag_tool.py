@@ -3,6 +3,8 @@ from langchain_community.vectorstores import FAISS
 from langchain_google_genai import ChatGoogleGenerativeAI
 from langchain.chains import RetrievalQA
 from langchain.embeddings.base import Embeddings
+from sentence_transformers import CrossEncoder
+import numpy as np
 from pydantic import BaseModel, Field
 import os
 import faiss
@@ -65,6 +67,8 @@ class EnhancedRAGTool:
         self.embeddings_model = None
         self.llm = None
         self.is_initialized = False
+        self.reranker = CrossEncoder("cross-encoder/ms-marco-MiniLM-L-6-v2")
+
         self._initialize()
         
     def _initialize(self):
@@ -117,7 +121,7 @@ class EnhancedRAGTool:
                     chain_type="stuff",
                     retriever=self.vectorstore.as_retriever(
                         search_type="similarity",
-                        search_kwargs={"k": 4}  # Increased for better coverage
+                        search_kwargs={"k": 10}  # Increased for better coverage
                     ),
                     return_source_documents=True
                 )
@@ -283,43 +287,88 @@ class EnhancedRAGTool:
             logger.error(f"Critical error in knowledge search: {e}")
             return f"I encountered an error while searching for information about '{query}'. Please try rephrasing your question or contact technical support."
     
-    def _direct_search(self, query: str) -> str:
-        """Direct search using the original FAISS index"""
-        try:
-            logger.info("Performing direct FAISS search")
+#     def _direct_search(self, query: str) -> str:
+#         """Direct search using the original FAISS index"""
+#         try:
+#             logger.info("Performing direct FAISS search")
             
-            # Get query embedding
+#             # Get query embedding
+#             query_embedding = self.embeddings_model.embed_query(query)
+#             query_embedding = np.array([query_embedding], dtype=np.float32)
+            
+#             # Search FAISS index
+#             D, I = self.faiss_index.search(query_embedding, k=4)
+#             matched_chunks = [self.chunks[i] for i in I[0] if i < len(self.chunks)]
+            
+#             if not matched_chunks:
+#                 return self._generate_llm_response(query)
+            
+#             # Generate response using matched chunks
+#             context = "\n\n".join(matched_chunks[:3])
+            
+#             prompt = f"""You are an expert agricultural advisor. Answer the following question using the provided context from agricultural documents.
+
+# Context from knowledge base:
+# {context}
+
+# Question: {query}
+
+# Please provide a comprehensive, practical answer based on the context provided. If the context doesn't fully address the question, use your agricultural expertise to provide additional relevant information. Structure your response clearly and make it actionable for farmers.
+
+# Do not include emojis in your response."""
+            
+#             response = self.llm.invoke(prompt)
+#             return response.content.strip()
+            
+#         except Exception as e:
+#             logger.error(f"Error in direct search: {e}")
+#             return self._generate_llm_response(query)
+
+
+# Load once in __init__
+
+    def _direct_search(self, query: str) -> str:
+        """Direct search with FAISS + CrossEncoder reranking"""
+        try:
+            logger.info("Performing FAISS search with CrossEncoder reranking")
+
+            # Step 1: Get query embedding & recall from FAISS
             query_embedding = self.embeddings_model.embed_query(query)
             query_embedding = np.array([query_embedding], dtype=np.float32)
-            
-            # Search FAISS index
-            D, I = self.faiss_index.search(query_embedding, k=4)
-            matched_chunks = [self.chunks[i] for i in I[0] if i < len(self.chunks)]
-            
-            if not matched_chunks:
+
+            D, I = self.faiss_index.search(query_embedding, k=20)  # recall more
+            candidates = [(i, self.chunks[i]) for i in I[0] if i < len(self.chunks)]
+
+            if not candidates:
                 return self._generate_llm_response(query)
-            
-            # Generate response using matched chunks
-            context = "\n\n".join(matched_chunks[:3])
-            
+
+            # Step 2: Rerank with CrossEncoder
+            pairs = [(query, chunk) for _, chunk in candidates]
+            scores = self.reranker.predict(pairs)
+
+            reranked = sorted(zip(candidates, scores), key=lambda x: x[1], reverse=True)
+            top_chunks = [chunk for (_, chunk), _ in reranked[:5]]
+
+            # Step3: Build context and prompt
+            context = "\n\n".join(top_chunks)
+
             prompt = f"""You are an expert agricultural advisor. Answer the following question using the provided context from agricultural documents.
 
-Context from knowledge base:
-{context}
+    Context from knowledge base:
+    {context}
 
-Question: {query}
+    Question: {query}
 
-Please provide a comprehensive, practical answer based on the context provided. If the context doesn't fully address the question, use your agricultural expertise to provide additional relevant information. Structure your response clearly and make it actionable for farmers.
+    Please provide a comprehensive, practical answer based on the context provided. If the context doesn't fully address the question, use your agricultural expertise to provide additional relevant information. Structure your response clearly and make it actionable for farmers.
 
-Do not include emojis in your response."""
+    Do not include emojis in your response."""
             
             response = self.llm.invoke(prompt)
             return response.content.strip()
-            
+
         except Exception as e:
             logger.error(f"Error in direct search: {e}")
-            return self._generate_llm_response(query)
-    
+            return self._generate_llm_response(query)    
     def _generate_llm_response(self, query: str) -> str:
         """Generate response using only LLM knowledge"""
         try:
