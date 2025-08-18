@@ -3,7 +3,6 @@ from langchain_community.vectorstores import FAISS
 from langchain_google_genai import ChatGoogleGenerativeAI
 from langchain.chains import RetrievalQA
 from langchain.embeddings.base import Embeddings
-from sentence_transformers import CrossEncoder
 import numpy as np
 from pydantic import BaseModel, Field
 import os
@@ -67,14 +66,30 @@ class EnhancedRAGTool:
         self.embeddings_model = None
         self.llm = None
         self.is_initialized = False
-        self.reranker = CrossEncoder("cross-encoder/ms-marco-MiniLM-L-6-v2")
 
         self._initialize()
         
     def _initialize(self):
+        
         """Initialize the RAG system with embeddings and vector store"""
         try:
             logger.info("Initializing Enhanced RAG Tool...")
+            import os
+            os.environ["TRANSFORMERS_NO_TF"] = "1"
+            saved_tf = sys.modules.get("tensorflow")
+            saved_tf_keras = sys.modules.get("tf_keras")
+            sys.modules["tensorflow"] = None
+            sys.modules["tf_keras"] = None
+            from sentence_transformers import CrossEncoder
+            self.reranker = CrossEncoder("cross-encoder/ms-marco-MiniLM-L-6-v2")
+            if saved_tf is not None:
+                sys.modules["tensorflow"] = saved_tf
+            else:
+                sys.modules.pop("tensorflow", None)
+            if saved_tf_keras is not None:
+                sys.modules["tf_keras"] = saved_tf_keras
+            else:
+                sys.modules.pop("tf_keras", None)
             
             # Initialize embeddings (matching your creation script)
             self.embeddings_model = SentenceTransformerEmbeddings("sentence-transformers/all-MiniLM-L6-v2")

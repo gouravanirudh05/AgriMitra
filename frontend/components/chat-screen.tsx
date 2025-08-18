@@ -864,8 +864,8 @@ export default function ChatScreen() {
         </Sheet>
 
         <div className="flex items-center gap-2">
-          <div className="p-2 bg-green-100 rounded-lg">
-            <Sprout className="h-5 w-5 text-green-600" />
+          <div className="p-2 bg-gradient-to-r from-orange-500 to-green-600 rounded-lg">
+            <Sprout className="h-5 w-5 text-white" />
           </div>
           <h1 className="text-lg font-semibold text-green-800">{t("chat.title")}</h1>
         </div>
