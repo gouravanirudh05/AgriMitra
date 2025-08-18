@@ -100,13 +100,13 @@ const YouTubeVideoCard = ({ url }: { url: string }) => {
   if (!videoInfo) return null
 
   return (
-    <div 
+    <div
       className="flex items-center gap-3 p-2 bg-gray-50 rounded-lg border cursor-pointer hover:bg-gray-100 transition-colors"
       onClick={() => window.open(url, '_blank')}
     >
       <div className="relative flex-shrink-0">
-        <img 
-          src={videoInfo.thumbnail} 
+        <img
+          src={videoInfo.thumbnail}
           alt={videoInfo.title}
           className="w-16 h-12 rounded object-cover"
           onError={(e) => {
@@ -131,16 +131,16 @@ const YouTubeVideoCard = ({ url }: { url: string }) => {
 }
 
 // Image preview component
-const ImagePreview = ({ src, alt, onRemove, className = "" }: { 
+const ImagePreview = ({ src, alt, onRemove, className = "" }: {
   src: string
   alt?: string
   onRemove?: () => void
   className?: string
 }) => (
   <div className={`relative inline-block ${className}`}>
-    <img 
-      src={src} 
-      alt={alt || "Uploaded image"} 
+    <img
+      src={src}
+      alt={alt || "Uploaded image"}
       className="max-w-full max-h-48 rounded-lg object-contain border"
     />
     {onRemove && (
@@ -259,12 +259,38 @@ export default function ChatScreen() {
     }
     return examples[language as keyof typeof examples] || examples.en
   }
+  const [speaking, setSpeaking] = useState(false);
 
+  function speakText(text: string) {
+    if (!("speechSynthesis" in window)) {
+      alert("Your browser does not support text-to-speech.");
+      return;
+    }
+
+    if (speaking) {
+      // Stop current speech
+      window.speechSynthesis.cancel();
+      setSpeaking(false);
+      return;
+    }
+
+    // Clean up markdown artifacts (basic)
+    const plainText = text.replace(/[#_*`>\[\]\(\)]/g, "");
+
+    const utterance = new SpeechSynthesisUtterance(plainText);
+    utterance.lang = "auto"; // browsers usually pick a default
+
+    utterance.onend = () => setSpeaking(false);
+
+    window.speechSynthesis.cancel();
+    window.speechSynthesis.speak(utterance);
+    setSpeaking(true);
+  }
   useEffect(() => {
     // Initialize speech recognition with better browser support detection
     if (typeof window !== 'undefined') {
       const SpeechRecognition = (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition
-      
+
       if (SpeechRecognition) {
         recognitionRef.current = new SpeechRecognition()
         recognitionRef.current.continuous = true // Changed to false for better control
@@ -279,12 +305,12 @@ export default function ChatScreen() {
         let finalTranscript = ""
         recognitionRef.current.onresult = (event: any) => {
           clearTimeout(silenceTimeout) // Reset the silence timeout
-              silenceTimeout = setTimeout(() => {
-              recognitionRef.current?.stop()
+          silenceTimeout = setTimeout(() => {
+            recognitionRef.current?.stop()
           }, 5000)
           let interimTranscript = ""
-          
-          
+
+
           for (let i = event.resultIndex; i < event.results.length; i++) {
             const transcript = event.results[i][0].transcript
             if (event.results[i].isFinal) {
@@ -293,7 +319,7 @@ export default function ChatScreen() {
               interimTranscript += transcript
             }
           }
-          
+
           // Update the input field with live transcription
           const currentText = interimTranscript || finalTranscript
           if (currentText) {
@@ -305,7 +331,7 @@ export default function ChatScreen() {
           console.error("Speech recognition error:", event.error)
           setIsListening(false)
           stopAudioVisualization()
-          
+
           if (event.error !== 'aborted') {
             toast({
               title: t("common.error"),
@@ -323,6 +349,7 @@ export default function ChatScreen() {
         }
       }
     }
+
 
     // Cleanup on unmount
     return () => {
@@ -441,7 +468,7 @@ export default function ChatScreen() {
       setMessage("")
       setIsListening(true)
       recognitionRef.current.lang = getLanguageCode(language)
-      
+
       try {
         recognitionRef.current.start()
         startAudioVisualization()
@@ -595,11 +622,10 @@ export default function ChatScreen() {
         <div className="flex flex-col items-center space-y-4">
           <Button
             size="lg"
-            className={`w-24 h-24 rounded-full transition-all duration-200 ${
-              isListening 
-                ? "bg-red-500 hover:bg-red-600 animate-pulse shadow-lg" 
-                : "bg-green-600 hover:bg-green-700 shadow-md hover:shadow-lg"
-            }`}
+            className={`w-24 h-24 rounded-full transition-all duration-200 ${isListening
+              ? "bg-red-500 hover:bg-red-600 animate-pulse shadow-lg"
+              : "bg-green-600 hover:bg-green-700 shadow-md hover:shadow-lg"
+              }`}
             onClick={isListening ? stopListening : startListening}
           >
             {isListening ? (
@@ -670,8 +696,8 @@ export default function ChatScreen() {
             <div className="text-center space-y-2">
               <FileImage className="h-8 w-8 text-blue-600 mx-auto" />
               <p className="text-sm font-medium text-blue-800">Image attached</p>
-              <ImagePreview 
-                src={selectedImage} 
+              <ImagePreview
+                src={selectedImage}
                 onRemove={() => setSelectedImage(null)}
                 className="mx-auto"
               />
@@ -702,10 +728,10 @@ export default function ChatScreen() {
           {isListening && (
             <div className="text-center mt-2 p-3 bg-green-50 rounded-lg border border-green-200">
               <p className="text-sm text-green-600 font-medium">{t("chat.listening")}</p>
-              <Button 
-                variant="outline" 
-                size="sm" 
-                onClick={stopListening} 
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={stopListening}
                 className="mt-2 bg-white hover:bg-gray-50"
               >
                 {t("chat.stopRecording")}
@@ -863,14 +889,14 @@ export default function ChatScreen() {
                       {msg.isUser && msg.image && (
                         <ImagePreview src={msg.image} className="mb-2" />
                       )}
-                      
+
                       {/* Message text */}
                       {msg.text && (
                         <div className="text-sm table-container">
                           <Markdown remarkPlugins={[remarkGfm]}>{msg.text}</Markdown>
                         </div>
                       )}
-                      
+
                       {/* YouTube videos */}
                       {msg.youtube && msg.youtube.length > 0 && (
                         <div className="space-y-2 mt-2">
@@ -879,7 +905,7 @@ export default function ChatScreen() {
                           ))}
                         </div>
                       )}
-                      
+
                       {/* Sources */}
                       {msg.sources && (
                         <div className="mt-2 p-2 bg-gray-50 rounded text-xs">
@@ -887,10 +913,18 @@ export default function ChatScreen() {
                           <p className="text-gray-600">{msg.sources}</p>
                         </div>
                       )}
-                      
+
                       <p className={`text-xs mt-2 ${msg.isUser ? "text-green-100" : "text-gray-500"}`}>
                         {msg.timestamp.toLocaleTimeString()}
                       </p>
+                      {!msg.isUser && (
+                        <button
+                          className="mt-2 text-xs text-blue-600 underline"
+                          onClick={() => speakText(msg.text)}
+                        >
+                          {speaking ? "⏹ Stop Speaking" : "🔊 Start Speaking"}
+                        </button>
+                      )}
                     </CardContent>
                   </Card>
                 </div>
@@ -936,8 +970,8 @@ export default function ChatScreen() {
                   </Button>
                 </div>
                 <div className="mt-2">
-                  <ImagePreview 
-                    src={selectedImage} 
+                  <ImagePreview
+                    src={selectedImage}
                     className="max-w-32 max-h-32"
                   />
                 </div>
@@ -974,22 +1008,22 @@ export default function ChatScreen() {
                   </Button>
                 </div>
               </div>
-              <Button 
-                onClick={() => sendMessage()} 
-                disabled={(!message.trim() && !selectedImage) || isLoading} 
+              <Button
+                onClick={() => sendMessage()}
+                disabled={(!message.trim() && !selectedImage) || isLoading}
                 className="h-12 w-12"
               >
                 <Send className="h-4 w-4" />
               </Button>
             </div>
-            
+
             {isListening && (
               <div className="text-center mt-2 p-2 bg-green-50 rounded-lg border border-green-200">
                 <p className="text-sm text-green-600 font-medium">{t("chat.listening")}</p>
-                <Button 
-                  variant="outline" 
-                  size="sm" 
-                  onClick={stopListening} 
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={stopListening}
                   className="mt-1 bg-white hover:bg-gray-50"
                 >
                   {t("chat.stopRecording")}
@@ -1008,7 +1042,7 @@ export default function ChatScreen() {
           />
         </>
       )}
-      
+
       <Dialog open={openProfileEdit} onOpenChange={setOpenProfileEdit}>
         <DialogContent className="max-w-2xl p-0 overflow-hidden">
           <DialogHeader className="p-4 border-b">

@@ -55,7 +55,7 @@ class Conversation(BaseModel):
 class ChatResponse(BaseModel):
     response: str
     conversationId: str
-    youtube: Optional[str] = None
+    youtube: Optional[List[str]] = None
     sources: Optional[str] = None
     image: Optional[str] = None
 

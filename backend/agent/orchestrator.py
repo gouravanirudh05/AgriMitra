@@ -609,7 +609,7 @@ Once all necessary agent responses are collected, combine them into a single, co
                 logger.info(f"✅ LangGraph supervisor completed successfully")
                 for m in result["messages"]:
                     m.pretty_print()
-                assistant_messages = [m for m in result["messages"] if getattr(m, "content", None)]
+                assistant_messages = [m for m in result["messages"] if getattr(m, "content", None) and isinstance(m, AIMessage)]
                 if assistant_messages:
                     final_message = '\n'.join([m.content for m in assistant_messages])
                 else:
