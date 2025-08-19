@@ -9,7 +9,7 @@
 > An intelligent, multi-agent agricultural assistant powered by LangGraph supervisor pattern and Gemini AI, designed specifically for Indian farmers and agricultural professionals. Built with government data sources and zero external API dependencies except Google's Gemini.
 ## 🎥 Demo Video
 
-[![Watch the Demo](https://img.youtube.com/vi/vavG5e0Nzqw/0.jpg)](https://youtu.be/vavG5e0Nzqw)
+[![Watch the Demo](https://img.youtube.com/vi/McXRRB2uItU/0.jpg)](https://youtu.be/McXRRB2uItU)
 
 ## Table of Contents
 
