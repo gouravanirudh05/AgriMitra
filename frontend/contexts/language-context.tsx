@@ -64,6 +64,8 @@ const translations = {
     "chat.thinking": "Thinking...",
     "chat.stopListening": "Stop Recording",
     "chat.typeQuestion": "Type Your Question",
+    "chat.welcome.uploadimg": "Upload image",
+    "chat.welcome.shareimg": "Share a photo",
 
     // Common
     "common.selectLanguage": "Select Language",
@@ -168,6 +170,8 @@ const translations = {
     "chat.thinking": "सोच रहा हूं...",
     "chat.stopListening": "रिकॉर्डिंग बंद करें",
     "chat.typeQuestion": "अपना प्रश्न टाइप करें",
+    "chat.welcome.uploadimg": "फोटो अपलोड",
+    "chat.welcome.shareimg": "एक फोटो शेयर करें",
 
     // Common
     "common.selectLanguage": "भाषा चुनें",
@@ -273,6 +277,8 @@ const translations = {
     "chat.thinking": "ಯೋಚಿಸುತ್ತಿದೆ...",
     "chat.stopListening": "ರೆಕಾರ್ಡಿಂಗ್ ನಿಲ್ಲಿಸಿ",
     "chat.typeQuestion": "ನಿಮ್ಮ ಪ್ರಶ್ನೆಯನ್ನು ಟೈಪ್ ಮಾಡಿ",
+    "chat.welcome.uploadimg": "ಫೋಟೋ ಅಪ್ಲೋಡ್ ಮಾಡಿ",
+    "chat.welcome.shareimg": "ಒಂದು ಫೋಟೋನ್ನು ಹಂಚಿಕೊಳ್ಳಿ",
 
     // Common
     "common.selectLanguage": "ಭಾಷೆ ಆಯ್ಕೆಮಾಡಿ",
@@ -314,6 +320,7 @@ const translations = {
 
     // Nav
     "nav.dashboard": "ಡ್ಯಾಶ್‌ಬೋರ್ಡ್",
+    "nav.openprofile": "ಪ್ರೊಫೈಲ್ ತೆರೆಯಿರಿ",
     "nav.settings": "ಸೆಟ್ಟಿಂಗ್‌ಗಳು",
     "nav.help": "ಸಹಾಯ",
     "nav.logout": "ಲಾಗ್‌ಔಟ್",

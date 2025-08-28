@@ -241,6 +241,10 @@ def get_recommendation(district_name, crop_name, npk_oc):
     def best_match(name, items):
         if not items:
             return None
+        for item in items:
+            if item["name"].lower() == name.lower():
+                return item
+        
         match_name, score, idx = process.extractOne(
             name.lower(),
             [item["name"].lower() for item in items],

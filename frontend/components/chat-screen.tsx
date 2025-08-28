@@ -681,8 +681,8 @@ export default function ChatScreen() {
             <ImageIcon className="h-8 w-8" />
           </Button>
           <div className="text-center">
-            <p className="font-medium text-gray-900">Upload Image</p>
-            <p className="text-sm text-gray-500">Share a photo</p>
+            <p className="font-medium text-gray-900">{t("chat.welcome.uploadimg")}</p>
+            <p className="text-sm text-gray-500">{t("chat.welcome.shareimg")}</p>
           </div>
         </div>
       </div>
